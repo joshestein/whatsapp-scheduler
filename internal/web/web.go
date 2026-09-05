@@ -19,17 +19,18 @@ var templateFS embed.FS
 var staticFS embed.FS
 
 type Server struct {
-	store *store.Store
-	log   *slog.Logger
-	tmpl  *template.Template
+	store   *store.Store
+	session *session.Session
+	log     *slog.Logger
+	tmpl    *template.Template
 }
 
-func New(st *store.Store, log *slog.Logger) (*Server, error) {
+func New(st *store.Store, sess *session.Session, log *slog.Logger) (*Server, error) {
 	tmpl, err := template.ParseFS(templateFS, "templates/*.html")
 	if err != nil {
 		return nil, err
 	}
-	return &Server{store: st, log: log, tmpl: tmpl}, nil
+	return &Server{store: st, session: sess, log: log, tmpl: tmpl}, nil
 }
 
 func (s *Server) Handler() http.Handler {
