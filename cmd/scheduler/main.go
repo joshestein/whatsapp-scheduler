@@ -36,7 +36,7 @@ func run(log *slog.Logger) error {
 		return err
 	}
 
-	db, err := store.Open(ctx, filepath.Join(cfg.DataDir, "scheduler.db"))
+	db, err := store.Open(filepath.Join(cfg.DataDir, "scheduler.db"))
 	if err != nil {
 		return err
 	}

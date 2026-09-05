@@ -21,7 +21,7 @@ type Store struct {
 	db *sql.DB
 }
 
-func Open(ctx context.Context, path string) (*sql.DB, error) {
+func Open(path string) (*sql.DB, error) {
 	dsn := "file:" + path + "?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)"
 	return sql.Open("sqlite", dsn)
 }
