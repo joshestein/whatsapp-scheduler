@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/joshestein/whatsapp-scheduler/internal/config"
+	"github.com/joshestein/whatsapp-scheduler/internal/scheduler"
 	"github.com/joshestein/whatsapp-scheduler/internal/session"
 	"github.com/joshestein/whatsapp-scheduler/internal/store"
 	"github.com/joshestein/whatsapp-scheduler/internal/web"
@@ -54,6 +55,9 @@ func run(log *slog.Logger) error {
 	}
 	sess.Start(ctx)
 	defer sess.Stop()
+
+	sched := scheduler.New(st, sess, log, cfg.Tick, cfg.GraceWindow)
+	go sched.Run(ctx)
 
 	ui, err := web.New(st, sess, log)
 	if err != nil {
