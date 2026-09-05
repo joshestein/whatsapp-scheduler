@@ -7,19 +7,49 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
 	"github.com/joshestein/whatsapp-scheduler/internal/config"
+	"github.com/joshestein/whatsapp-scheduler/internal/store"
+	"github.com/joshestein/whatsapp-scheduler/internal/web"
 )
 
 func main() {
 	log := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	if err := run(log); err != nil {
+		log.Error("fatal", "err", err)
+		os.Exit(1)
+	}
+}
+
+// run holds all wiring so that deferred cleanup (db.Close) runs on every
+// exit path. main only reports the error.
+func run(log *slog.Logger) error {
 	cfg := config.Load()
 
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	if err := os.MkdirAll(cfg.DataDir, 0o700); err != nil {
-		log.Error("create data dir", "err", err)
-		os.Exit(1)
+		return err
+	}
+
+	db, err := store.Open(ctx, filepath.Join(cfg.DataDir, "scheduler.db"))
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	st, err := store.New(ctx, db)
+	if err != nil {
+		return err
+	}
+
+	ui, err := web.New(st, log)
+	if err != nil {
+		return err
 	}
 
 	mux := http.NewServeMux()
@@ -27,11 +57,9 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"session":"unknown"}`))
 	})
+	mux.Handle("/", ui.Handler())
 
 	srv := &http.Server{Addr: cfg.ListenAddr, Handler: mux}
-
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
 
 	go func() {
 		log.Info("listening", "addr", cfg.ListenAddr, "data_dir", cfg.DataDir)
@@ -46,7 +74,5 @@ func main() {
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Error("shutdown", "err", err)
-	}
+	return srv.Shutdown(shutdownCtx)
 }
