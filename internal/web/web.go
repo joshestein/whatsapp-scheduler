@@ -80,7 +80,11 @@ func (s *Server) index(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, "list messages", err)
 		return
 	}
-	s.render(w, "index", listData{Messages: msgs})
+	contacts, err := s.session.Contacts(r.Context())
+	if err != nil {
+		s.log.Warn("contacts", "err", err) // page still renders, datalist empty
+	}
+	s.render(w, "index", indexData{Messages: msgs, Contacts: contacts, Session: s.sessionData()})
 }
 
 func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
