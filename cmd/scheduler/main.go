@@ -57,7 +57,17 @@ func run(log *slog.Logger) error {
 	defer sess.Stop()
 
 	sched := scheduler.New(st, sess, log, cfg.Tick, cfg.GraceWindow)
-	go sched.Run(ctx)
+	schedDone := make(chan struct{})
+	go func() {
+		defer close(schedDone)
+		sched.Run(ctx)
+	}()
+	// Registered after sess.Stop and db.Close, so it runs before them: cancel,
+	// then wait for the current tick to finish writing before the DB and session go away.
+	defer func() {
+		stop()
+		<-schedDone
+	}()
 
 	ui, err := web.New(st, sess, log)
 	if err != nil {
