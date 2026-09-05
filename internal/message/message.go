@@ -30,7 +30,7 @@ func (m Message) IsDue(now time.Time) bool {
 }
 
 func (m Message) PastGrace(now time.Time, grace time.Duration) bool {
-	return now.After(m.SendAt.Add(grace))
+	return !now.Before(m.SendAt.Add(grace))
 }
 
 // NeedsAck reports whether the UI should show a badge for this message.
