@@ -1,31 +1,49 @@
 {{define "index"}}
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>WhatsApp Scheduler</title>
-  <!-- Swap 422 so validation errors from POST /messages reach #form-error. Other 4xx/5xx stay unswapped. -->
-  <meta name="htmx-config" content='{"responseHandling":[{"code":"422","swap":true},{"code":"[23]..","swap":true},{"code":"[45]..","swap":false,"error":true}]}'>
-  <script src="/static/htmx.min.js"></script>
-</head>
-<body>
-  <h1>Scheduled messages</h1>
+    <head>
+        <meta charset="utf-8" />
+        <title>WhatsApp Scheduler</title>
+        <!-- Swap 422 so validation errors from POST /messages reach #form-error. Other 4xx/5xx stay unswapped. -->
+        <meta
+            name="htmx-config"
+            content='{"responseHandling":[{"code":"422","swap":true},{"code":"[23]..","swap":true},{"code":"[45]..","swap":false,"error":true}]}'
+        />
+        <script src="/static/htmx.min.js"></script>
+    </head>
+    <body>
+        <h1>Scheduled messages</h1>
 
-  {{template "session" .Session}}
+        {{template "session" .Session}}
 
-  <form hx-post="/messages" hx-target="#messages" hx-swap="outerHTML"
-        hx-on::after-request="if(event.detail.successful){this.reset();document.getElementById('form-error').textContent=''}">
-    <p id="form-error"></p>
-    <label>Recipient <input name="recipient_jid" list="contacts" required placeholder="27821234567@s.whatsapp.net"></label>
-    <datalist id="contacts">
-      {{range .Contacts}}<option value="{{.JID}}">{{.Name}}</option>{{end}}
-    </datalist>
-    <label>Send at <input name="send_at" type="datetime-local" required></label>
-    <label>Message <textarea name="body" required></textarea></label>
-    <button type="submit">Schedule</button>
-  </form>
+        <form
+            hx-post="/messages"
+            hx-target="#messages"
+            hx-swap="outerHTML"
+            hx-on::after-request="if(event.detail.successful){this.reset();document.getElementById('form-error').textContent=''}"
+        >
+            <p id="form-error"></p>
+            <label
+                >Recipient
+                <input
+                    name="recipient_jid"
+                    list="contacts"
+                    required
+                    placeholder="27821234567@s.whatsapp.net"
+            /></label>
+            <datalist id="contacts">
+                {{range .Contacts}}
+                <option value="{{.JID}}">{{.Name}}</option>
+                {{end}}
+            </datalist>
+            <label
+                >Send at <input name="send_at" type="datetime-local" required
+            /></label>
+            <label>Message <textarea name="body" required></textarea></label>
+            <button type="submit">Schedule</button>
+        </form>
 
-  {{template "list" .}}
-</body>
+        {{template "list" .}}
+    </body>
 </html>
 {{end}}

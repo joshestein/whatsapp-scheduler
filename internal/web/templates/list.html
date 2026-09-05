@@ -1,19 +1,26 @@
 {{define "list"}}
 <table id="messages">
-  <thead>
-    <tr><th>Send at</th><th>To</th><th>Message</th><th>State</th></tr>
-  </thead>
-  <tbody>
-    {{range .Messages}}
-    <tr>
-      <td>{{.SendAt.Local.Format "Mon 02 Jan 15:04"}}</td>
-      <td>{{.RecipientName}}</td>
-      <td>{{.Body}}</td>
-      <td>{{.State}}</td>
-    </tr>
-    {{else}}
-    <tr><td colspan="4">Nothing scheduled.</td></tr>
-    {{end}}
-  </tbody>
+    <thead>
+        <tr>
+            <th>Send at</th>
+            <th>To</th>
+            <th>Message</th>
+            <th>State</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .Messages}}
+        <tr>
+            <td>{{.SendAt.Local.Format "Mon 02 Jan 15:04"}}</td>
+            <td>{{.RecipientName}}</td>
+            <td>{{.Body}}</td>
+            <td>{{.State}}</td>
+        </tr>
+        {{else}}
+        <tr>
+            <td colspan="4">Nothing scheduled.</td>
+        </tr>
+        {{end}}
+    </tbody>
 </table>
 {{end}}
