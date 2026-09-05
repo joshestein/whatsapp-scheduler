@@ -1,0 +1,11 @@
+{{define "session"}}
+<div id="session" hx-get="/session" hx-trigger="every 5s" hx-swap="outerHTML">
+  <strong>WhatsApp:</strong> {{.State}}
+  {{if .QR}}
+  <p>Scan with WhatsApp: Settings, Linked devices, Link a device.</p>
+  <img src="{{.QR}}" alt="Pairing QR code" width="256" height="256">
+  {{else if eq .State "logged out"}}
+  <p>Restart the app to pair again.</p>
+  {{end}}
+</div>
+{{end}}

@@ -9,6 +9,8 @@
 <body>
   <h1>Scheduled messages</h1>
 
+  {{template "session" .Session}}
+
   <form hx-post="/messages" hx-target="#messages" hx-swap="outerHTML"
         hx-on::after-request="if(event.detail.successful) this.reset()">
     <label>Recipient JID <input name="recipient_jid" required placeholder="27821234567@s.whatsapp.net"></label>
