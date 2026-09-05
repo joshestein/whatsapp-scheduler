@@ -106,6 +106,11 @@ func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
 		s.formError(w, "invalid send time")
 		return
 	}
+	now := time.Now()
+	if sendAt.Before(now.Truncate(time.Minute)) {
+		s.formError(w, "send time is in the past")
+		return
+	}
 	name := s.contactName(r.Context(), jid)
 
 	_, err = s.store.Create(r.Context(), message.Message{
