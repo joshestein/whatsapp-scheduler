@@ -1,0 +1,134 @@
+:root {
+    --accent: #128c7e;
+    --border: #e2e2e2;
+    --bg: #f7f7f5;
+    --fg: #1a1a1a;
+    --muted: #666;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font:
+        16px/1.5 system-ui,
+        -apple-system,
+        sans-serif;
+    color: var(--fg);
+    background: var(--bg);
+    max-width: 720px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+h1 {
+    font-size: 1.5rem;
+}
+
+#session {
+    padding: 0.75rem 1rem;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+#session img {
+    display: block;
+    margin-top: 0.75rem;
+}
+
+form {
+    display: grid;
+    gap: 0.75rem;
+    background: #fff;
+    padding: 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+label {
+    display: grid;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+input,
+textarea {
+    font: inherit;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--fg);
+}
+
+input:focus,
+textarea:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+}
+
+textarea {
+    min-height: 4rem;
+    resize: vertical;
+}
+
+button {
+    font: inherit;
+    font-weight: 600;
+    padding: 0.55rem 1rem;
+    border: 0;
+    border-radius: 6px;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    justify-self: start;
+}
+
+button:hover {
+    background: #0e7568;
+}
+
+#form-error {
+    color: #c0392b;
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+#form-error:empty {
+    display: none;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+}
+
+th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--muted);
+    background: #fafafa;
+}
+
+tr:last-child td {
+    border-bottom: 0;
+}
