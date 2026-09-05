@@ -125,3 +125,25 @@ func (s *Store) BeginSending(ctx context.Context, now time.Time) ([]message.Mess
 	}
 	return scanMessages(rows)
 }
+
+func (s *Store) MarkSent(ctx context.Context, id int64, now time.Time) error {
+	return s.affectOne(ctx, `UPDATE messages SET state = ?, sent_at = ? WHERE id = ? AND state = ?`,
+		message.Sent, now.Unix(), id, message.Sending)
+}
+
+// affectOne runs a single-row write and reports a non-match as ErrNotFound.
+// Only for queries filtered on id.
+func (s *Store) affectOne(ctx context.Context, query string, args ...any) error {
+	res, err := s.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
