@@ -9,6 +9,7 @@ import (
 
 	"github.com/joshestein/whatsapp-scheduler/internal/message"
 	"github.com/pressly/goose/v3"
+	_ "modernc.org/sqlite"
 )
 
 //go:embed migrations/*.sql
