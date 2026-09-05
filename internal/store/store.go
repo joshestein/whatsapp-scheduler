@@ -14,6 +14,8 @@ import (
 //go:embed migrations/*.sql
 var migrations embed.FS
 
+var ErrNotFound = errors.New("message not found")
+
 type Store struct {
 	db *sql.DB
 }
@@ -75,6 +77,19 @@ func scanMessage(r scanner) (message.Message, error) {
 	return m, nil
 }
 
+func scanMessages(rows *sql.Rows) ([]message.Message, error) {
+	defer rows.Close()
+	var out []message.Message
+	for rows.Next() {
+		m, err := scanMessage(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, m)
+	}
+	return out, rows.Err()
+}
+
 func (s *Store) Create(ctx context.Context, m message.Message, now time.Time) (message.Message, error) {
 	row := s.db.QueryRowContext(ctx, `
 		INSERT INTO messages (recipient_jid, recipient_name, body, send_at, state, created_at)
@@ -84,3 +99,19 @@ func (s *Store) Create(ctx context.Context, m message.Message, now time.Time) (m
 	return scanMessage(row)
 }
 
+func (s *Store) Get(ctx context.Context, id int64) (message.Message, error) {
+	row := s.db.QueryRowContext(ctx, `SELECT `+columns+` FROM messages WHERE id = ?`, id)
+	m, err := scanMessage(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return m, ErrNotFound
+	}
+	return m, err
+}
+
+func (s *Store) List(ctx context.Context) ([]message.Message, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT `+columns+` FROM messages ORDER BY send_at ASC, id ASC`)
+	if err != nil {
+		return nil, err
+	}
+	return scanMessages(rows)
+}
