@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/joshestein/whatsapp-scheduler/internal/config"
+	"github.com/joshestein/whatsapp-scheduler/internal/session"
 	"github.com/joshestein/whatsapp-scheduler/internal/store"
 	"github.com/joshestein/whatsapp-scheduler/internal/web"
 )
@@ -47,19 +48,19 @@ func run(log *slog.Logger) error {
 		return err
 	}
 
-	ui, err := web.New(st, log)
+	sess, err := session.New(ctx, db, log)
+	if err != nil {
+		return err
+	}
+	sess.Start(ctx)
+	defer sess.Stop()
+
+	ui, err := web.New(st, sess, log)
 	if err != nil {
 		return err
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"session":"unknown"}`))
-	})
-	mux.Handle("/", ui.Handler())
-
-	srv := &http.Server{Addr: cfg.ListenAddr, Handler: mux}
+	srv := &http.Server{Addr: cfg.ListenAddr, Handler: ui.Handler()}
 
 	go func() {
 		log.Info("listening", "addr", cfg.ListenAddr, "data_dir", cfg.DataDir)
