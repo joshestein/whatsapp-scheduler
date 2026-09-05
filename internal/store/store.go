@@ -116,7 +116,7 @@ func (s *Store) List(ctx context.Context) ([]message.Message, error) {
 
 func (s *Store) BeginSending(ctx context.Context, now time.Time) ([]message.Message, error) {
 	rows, err := s.db.QueryContext(ctx, `
-		UPDATE messages SET sate = ?
+		UPDATE messages SET state = ?
 		WHERE state = ? AND send_at <= ?
 		RETURNING `+columns,
 		message.Sending, message.Pending, now.Unix())
