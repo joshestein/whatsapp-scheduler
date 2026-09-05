@@ -1,0 +1,24 @@
+{{define "index"}}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>WhatsApp Scheduler</title>
+  <script src="/static/htmx.min.js"></script>
+</head>
+<body>
+  <h1>Scheduled messages</h1>
+
+  <form hx-post="/messages" hx-target="#messages" hx-swap="outerHTML"
+        hx-on::after-request="if(event.detail.successful) this.reset()">
+    <label>Recipient JID <input name="recipient_jid" required placeholder="27821234567@s.whatsapp.net"></label>
+    <label>Name <input name="recipient_name"></label>
+    <label>Send at <input name="send_at" type="datetime-local" required></label>
+    <label>Message <textarea name="body" required></textarea></label>
+    <button type="submit">Schedule</button>
+  </form>
+
+  {{template "list" .}}
+</body>
+</html>
+{{end}}
