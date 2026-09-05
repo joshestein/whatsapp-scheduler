@@ -8,7 +8,7 @@ Domain language for the WhatsApp Scheduler. One word, one meaning.
 
 **Session** — the authenticated link to the user's own WhatsApp account. Made once by QR scan. Must stay alive so messages send without a new scan. Has one of three states, see below.
 
-**Contact** — a person or group in the user's WhatsApp who can receive a message.
+**Contact** — a person or group in the user's WhatsApp who can receive a message, identified by JID.
 
 **Send** — the act of delivering a Scheduled Message through the live Session.
 
