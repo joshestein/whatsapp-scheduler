@@ -106,7 +106,7 @@ func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if name == "" {
-		name = jid
+		name = s.contactName(r.Context(), jid)
 	}
 
 	_, err = s.store.Create(r.Context(), message.Message{
@@ -126,6 +126,20 @@ func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.render(w, "list", listData{Messages: msgs})
+}
+
+// contactName returns the known name for jid, or jid itself when unknown.
+func (s *Server) contactName(ctx context.Context, jid string) string {
+	contacts, err := s.session.Contacts(ctx)
+	if err != nil {
+		return jid
+	}
+	for _, c := range contacts {
+		if c.JID == jid {
+			return c.Name
+		}
+	}
+	return jid
 }
 
 func (s *Server) sessionPartial(w http.ResponseWriter, _ *http.Request) {
