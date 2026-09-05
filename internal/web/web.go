@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"encoding/base64"
+	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -43,6 +44,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /{$}", s.index)
 	mux.HandleFunc("POST /messages", s.createMessage)
 	mux.HandleFunc("GET /session", s.sessionPartial)
+	mux.HandleFunc("GET /healthz", s.healthz)
 	return mux
 }
 
@@ -144,6 +146,11 @@ func (s *Server) contactName(ctx context.Context, jid string) string {
 
 func (s *Server) sessionPartial(w http.ResponseWriter, _ *http.Request) {
 	s.render(w, "session", s.sessionData())
+}
+
+func (s *Server) healthz(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"session":%q}`, s.session.State())
 }
 
 func (s *Server) render(w http.ResponseWriter, name string, data any) {
