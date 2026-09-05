@@ -131,6 +131,11 @@ func (s *Store) MarkSent(ctx context.Context, id int64, now time.Time) error {
 		message.Sent, now.Unix(), id, message.Sending)
 }
 
+func (s *Store) MarkFailed(ctx context.Context, id int64, reason string) error {
+	return s.affectOne(ctx, `UPDATE messages SET state = ?, error = ? WHERE id = ? AND state = ?`,
+		message.Failed, reason, id, message.Sending)
+}
+
 // affectOne runs a single-row write and reports a non-match as ErrNotFound.
 // Only for queries filtered on id.
 func (s *Store) affectOne(ctx context.Context, query string, args ...any) error {
