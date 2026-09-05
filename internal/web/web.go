@@ -95,7 +95,6 @@ func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	jid := strings.TrimSpace(r.PostForm.Get("recipient_jid"))
-	name := strings.TrimSpace(r.PostForm.Get("recipient_name"))
 	body := strings.TrimSpace(r.PostForm.Get("body"))
 	if jid == "" || body == "" {
 		http.Error(w, "recipient and message are required", http.StatusBadRequest)
@@ -107,9 +106,7 @@ func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid send time", http.StatusBadRequest)
 		return
 	}
-	if name == "" {
-		name = s.contactName(r.Context(), jid)
-	}
+	name := s.contactName(r.Context(), jid)
 
 	_, err = s.store.Create(r.Context(), message.Message{
 		RecipientJID:  jid,

@@ -17,7 +17,6 @@
     <datalist id="contacts">
       {{range .Contacts}}<option value="{{.JID}}">{{.Name}}</option>{{end}}
     </datalist>
-    <label>Name <input name="recipient_name"></label>
     <label>Send at <input name="send_at" type="datetime-local" required></label>
     <label>Message <textarea name="body" required></textarea></label>
     <button type="submit">Schedule</button>
