@@ -21,17 +21,14 @@ type Store struct {
 	db *sql.DB
 }
 
-func Open(ctx context.Context, path string) (*Store, error) {
+func Open(ctx context.Context, path string) (*sql.DB, error) {
 	dsn := "file:" + path + "?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)"
-	db, err := sql.Open("sqlite", dsn)
-	if err != nil {
-		return nil, err
-	}
+	return sql.Open("sqlite", dsn)
+}
 
+func New(ctx context.Context, db *sql.DB) (*Store, error) {
 	s := &Store{db: db}
-
 	if err := s.migrate(ctx); err != nil {
-		db.Close()
 		return nil, err
 	}
 	return s, nil
