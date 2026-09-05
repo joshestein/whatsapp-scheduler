@@ -1,7 +1,9 @@
 package web
 
 import (
+	"context"
 	"embed"
+	"encoding/base64"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -9,7 +11,9 @@ import (
 	"time"
 
 	"github.com/joshestein/whatsapp-scheduler/internal/message"
+	"github.com/joshestein/whatsapp-scheduler/internal/session"
 	"github.com/joshestein/whatsapp-scheduler/internal/store"
+	"github.com/skip2/go-qrcode"
 )
 
 //go:embed templates/*.html
@@ -38,11 +42,36 @@ func (s *Server) Handler() http.Handler {
 	mux.Handle("GET /static/", http.FileServerFS(staticFS))
 	mux.HandleFunc("GET /{$}", s.index)
 	mux.HandleFunc("POST /messages", s.createMessage)
+	mux.HandleFunc("GET /session", s.sessionPartial)
 	return mux
 }
 
 type listData struct {
 	Messages []message.Message
+}
+
+type indexData struct {
+	Messages []message.Message
+	Contacts []session.Contact
+	Session  sessionData
+}
+
+type sessionData struct {
+	State session.State
+	QR    template.URL
+}
+
+func (s *Server) sessionData() sessionData {
+	d := sessionData{State: s.session.State()}
+	if code := s.session.QR(); code != "" {
+		png, err := qrcode.Encode(code, qrcode.Medium, 256)
+		if err != nil {
+			s.log.Error("qr encode", "err", err)
+		} else {
+			d.QR = template.URL("data:image/png;base64," + base64.StdEncoding.EncodeToString(png))
+		}
+	}
+	return d
 }
 
 func (s *Server) index(w http.ResponseWriter, r *http.Request) {
@@ -93,6 +122,10 @@ func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.render(w, "list", listData{Messages: msgs})
+}
+
+func (s *Server) sessionPartial(w http.ResponseWriter, _ *http.Request) {
+	s.render(w, "session", s.sessionData())
 }
 
 func (s *Server) render(w http.ResponseWriter, name string, data any) {
