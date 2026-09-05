@@ -35,8 +35,9 @@ type Contact struct {
 type Session struct {
 	client    *whatsmeow.Client
 	log       *slog.Logger
-	loggedOut atomic.Bool  // set by the LoggedOut event; cleared only by restart
-	qr        atomic.Value // string; "" when no code is on offer
+	cancel    context.CancelFunc // stops run(); set by Start
+	loggedOut atomic.Bool        // set by the LoggedOut event; cleared only by restart
+	qr        atomic.Value       // string; "" when no code is on offer
 }
 
 func New(ctx context.Context, db *sql.DB, log *slog.Logger) (*Session, error) {
@@ -58,9 +59,18 @@ func New(ctx context.Context, db *sql.DB, log *slog.Logger) (*Session, error) {
 
 // Start connects in the background. If unpaired, it serves QR codes via QR()
 // until the phone scans one.
-func (s *Session) Start(ctx context.Context) { go s.run(ctx) }
+func (s *Session) Start(ctx context.Context) {
+	ctx, s.cancel = context.WithCancel(ctx)
+	go s.run(ctx)
+}
 
-func (s *Session) Stop() { s.client.Disconnect() }
+// Stop ends the connect/pair loop and closes the socket. Credentials stay in the db.
+func (s *Session) Stop() {
+	if s.cancel != nil {
+		s.cancel()
+	}
+	s.client.Disconnect()
+}
 
 func (s *Session) State() State {
 	switch {
