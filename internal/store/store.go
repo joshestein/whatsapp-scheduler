@@ -136,6 +136,17 @@ func (s *Store) MarkFailed(ctx context.Context, id int64, reason string) error {
 		message.Failed, reason, id, message.Sending)
 }
 
+// RecoverSending runs once at startup. A row still in sending was in flight
+// when the process died. Its outcome is unknown, so it becomes failed (ADR-0003).
+func (s *Store) RecoverSending(ctx context.Context) (int64, error) {
+	res, err := s.db.ExecContext(ctx, `UPDATE messages SET state = ?, error = ? WHERE state = ?`,
+		message.Failed, "unknown outcome", message.Sending)
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
+}
+
 // affectOne runs a single-row write and reports a non-match as ErrNotFound.
 // Only for queries filtered on id.
 func (s *Store) affectOne(ctx context.Context, query string, args ...any) error {
