@@ -113,3 +113,15 @@ func (s *Store) List(ctx context.Context) ([]message.Message, error) {
 	}
 	return scanMessages(rows)
 }
+
+func (s *Store) BeginSending(ctx context.Context, now time.Time) ([]message.Message, error) {
+	rows, err := s.db.QueryContext(ctx, `
+		UPDATE messages SET sate = ?
+		WHERE state = ? AND send_at <= ?
+		RETURNING `+columns,
+		message.Sending, message.Pending, now.Unix())
+	if err != nil {
+		return nil, err
+	}
+	return scanMessages(rows)
+}
