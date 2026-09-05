@@ -29,9 +29,10 @@ func env(key, def string) string {
 }
 
 func duration(key string, def time.Duration) time.Duration {
-	d, err := time.ParseDuration(env(key, def.String()))
-	if err != nil {
-		return def
+	if v := os.Getenv(key); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			return d
+		}
 	}
-	return d
+	return def
 }
