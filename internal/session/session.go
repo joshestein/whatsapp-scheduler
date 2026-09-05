@@ -11,6 +11,7 @@ import (
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
+	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
@@ -39,6 +40,7 @@ type Session struct {
 }
 
 func New(ctx context.Context, db *sql.DB, log *slog.Logger) (*Session, error) {
+	store.DeviceProps.Os = proto.String("WhatsApp Scheduler")
 	waLogger := waLog.Stdout("whatsmeow", "WARN", true)
 	container := sqlstore.NewWithDB(db, "sqlite3", waLogger)
 	if err := container.Upgrade(ctx); err != nil {
