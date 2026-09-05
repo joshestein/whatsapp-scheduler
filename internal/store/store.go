@@ -126,6 +126,18 @@ func (s *Store) BeginSending(ctx context.Context, now time.Time) ([]message.Mess
 	return scanMessages(rows)
 }
 
+// MarkMissed moves pending messages past their Grace Window to missed.
+func (s *Store) MarkMissed(ctx context.Context, now time.Time, grace time.Duration) (int64, error) {
+	res, err := s.db.ExecContext(ctx, `
+		UPDATE messages SET state = ?
+		WHERE state = ? AND send_at <= ?`,
+		message.Missed, message.Pending, now.Add(-grace).Unix())
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
+}
+
 func (s *Store) MarkSent(ctx context.Context, id int64, now time.Time) error {
 	return s.affectOne(ctx, `UPDATE messages SET state = ?, sent_at = ? WHERE id = ? AND state = ?`,
 		message.Sent, now.Unix(), id, message.Sending)
