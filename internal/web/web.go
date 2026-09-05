@@ -1,0 +1,107 @@
+package web
+
+import (
+	"embed"
+	"html/template"
+	"log/slog"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/joshestein/whatsapp-scheduler/internal/message"
+	"github.com/joshestein/whatsapp-scheduler/internal/store"
+)
+
+//go:embed templates/*.html
+var templateFS embed.FS
+
+//go:embed static/*
+var staticFS embed.FS
+
+type Server struct {
+	store *store.Store
+	log   *slog.Logger
+	tmpl  *template.Template
+}
+
+func New(st *store.Store, log *slog.Logger) (*Server, error) {
+	tmpl, err := template.ParseFS(templateFS, "templates/*.html")
+	if err != nil {
+		return nil, err
+	}
+	return &Server{store: st, log: log, tmpl: tmpl}, nil
+}
+
+func (s *Server) Handler() http.Handler {
+	mux := http.NewServeMux()
+	mux.Handle("GET /static/", http.FileServerFS(staticFS))
+	mux.HandleFunc("GET /{$}", s.index)
+	mux.HandleFunc("POST /messages", s.createMessage)
+	return mux
+}
+
+type listData struct {
+	Messages []message.Message
+}
+
+func (s *Server) index(w http.ResponseWriter, r *http.Request) {
+	msgs, err := s.store.List(r.Context())
+	if err != nil {
+		s.fail(w, "list messages", err)
+		return
+	}
+	s.render(w, "index", listData{Messages: msgs})
+}
+
+func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "bad form", http.StatusBadRequest)
+		return
+	}
+	jid := strings.TrimSpace(r.PostForm.Get("recipient_jid"))
+	name := strings.TrimSpace(r.PostForm.Get("recipient_name"))
+	body := strings.TrimSpace(r.PostForm.Get("body"))
+	if jid == "" || body == "" {
+		http.Error(w, "recipient and message are required", http.StatusBadRequest)
+		return
+	}
+	// datetime-local input has no zone. Interpret it in the machine's local zone, store UTC
+	sendAt, err := time.ParseInLocation("2006-01-02T15:04", r.PostForm.Get("send_at"), time.Local)
+	if err != nil {
+		http.Error(w, "invalid send time", http.StatusBadRequest)
+		return
+	}
+	if name == "" {
+		name = jid
+	}
+
+	_, err = s.store.Create(r.Context(), message.Message{
+		RecipientJID:  jid,
+		RecipientName: name,
+		Body:          body,
+		SendAt:        sendAt.UTC(),
+	}, time.Now())
+	if err != nil {
+		s.fail(w, "create message", err)
+		return
+	}
+
+	msgs, err := s.store.List(r.Context())
+	if err != nil {
+		s.fail(w, "list messages", err)
+		return
+	}
+	s.render(w, "list", listData{Messages: msgs})
+}
+
+func (s *Server) render(w http.ResponseWriter, name string, data any) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := s.tmpl.ExecuteTemplate(w, name, data); err != nil {
+		s.log.Error("render", "template", name, "err", err)
+	}
+}
+
+func (s *Server) fail(w http.ResponseWriter, what string, err error) {
+	s.log.Error(what, "err", err)
+	http.Error(w, "internal error", http.StatusInternalServerError)
+}
