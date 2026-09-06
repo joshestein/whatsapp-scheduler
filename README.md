@@ -50,12 +50,12 @@ make install
 Then open <http://127.0.0.1:20648>. If you already paired via `make run`, it is
 already connected.
 
-| | macOS | Linux |
-|---|---|---|
-| Binary | `~/.local/bin/whatsapp-scheduler` | same |
+|         | macOS                                                            | Linux                                               |
+| ------- | ---------------------------------------------------------------- | --------------------------------------------------- |
+| Binary  | `~/.local/bin/whatsapp-scheduler`                                | same                                                |
 | Service | `~/Library/LaunchAgents/com.joshestein.whatsapp-scheduler.plist` | `~/.config/systemd/user/whatsapp-scheduler.service` |
-| Data | `~/Library/Application Support/whatsapp-scheduler/` | `~/.config/whatsapp-scheduler/` |
-| Log | `~/Library/Logs/whatsapp-scheduler.log` | `journalctl --user -u whatsapp-scheduler` |
+| Data    | `~/Library/Application Support/whatsapp-scheduler/`              | `~/.config/whatsapp-scheduler/`                     |
+| Log     | `~/Library/Logs/whatsapp-scheduler.log`                          | `journalctl --user -u whatsapp-scheduler`           |
 
 On Linux a user service stops at logout. For a headless box, turn on
 lingering once so it keeps running:
@@ -91,12 +91,12 @@ By environment variable. The defaults are what the installed service uses.
 On Linux, override with a drop-in: `systemctl --user edit whatsapp-scheduler`
 and add `Environment=LISTEN_ADDR=...` under `[Service]`.
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `DATA_DIR` | platform config dir, see above | Where the database and session live |
-| `LISTEN_ADDR` | `127.0.0.1:20648` | HTTP listen address |
-| `TICK` | `60s` | Scheduler poll interval |
-| `GRACE_WINDOW` | `30m` | How late a send may run before it counts as missed |
+| Variable       | Default                        | Purpose                                            |
+| -------------- | ------------------------------ | -------------------------------------------------- |
+| `DATA_DIR`     | platform config dir, see above | Where the database and session live                |
+| `LISTEN_ADDR`  | `127.0.0.1:20648`              | HTTP listen address                                |
+| `TICK`         | `60s`                          | Scheduler poll interval                            |
+| `GRACE_WINDOW` | `30m`                          | How late a send may run before it counts as missed |
 
 ## Build
 
