@@ -25,19 +25,37 @@
             hx-on::after-request="if(event.detail.successful){this.reset();document.getElementById('form-error').textContent=''}"
         >
             <p id="form-error"></p>
-            <label
-                >Recipient
-                <input
-                    name="recipient_jid"
-                    list="contacts"
-                    required
-                    placeholder="27821234567@s.whatsapp.net"
-            /></label>
-            <datalist id="contacts">
-                {{range .Contacts}}
-                <option value="{{.JID}}">{{.Name}}</option>
-                {{end}}
-            </datalist>
+            <div class="field">
+                <label for="recipient">Recipient</label>
+                <div class="combobox">
+                    <input
+                        id="recipient"
+                        type="text"
+                        role="combobox"
+                        autocomplete="off"
+                        aria-expanded="false"
+                        aria-controls="contacts"
+                        aria-autocomplete="list"
+                        required
+                        placeholder="Search contacts, or type a number with country code"
+                    />
+                    <input type="hidden" name="recipient_jid" />
+                    <ul id="contacts" role="listbox" hidden>
+                        {{range $i, $c := .Contacts}}
+                        <li
+                            role="option"
+                            id="opt-{{$i}}"
+                            data-jid="{{$c.JID}}"
+                            data-name="{{$c.Primary}}"
+                            data-search="{{$c.Search}}"
+                        >
+                            <span class="name">{{$c.Primary}}</span>
+                            <span class="muted">{{if $c.IsGroup}}Group{{else}}{{$c.Secondary}}{{end}}</span>
+                        </li>
+                        {{end}}
+                    </ul>
+                </div>
+            </div>
             <label
                 >Send at <input name="send_at" type="datetime-local" required
             /></label>
