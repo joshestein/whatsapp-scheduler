@@ -65,8 +65,11 @@ func (d listData) Attention() int {
 	}
 	return n
 }
+
+// indexData embeds listData so index.html can render the "list" template with
+// the same dot: Messages and Attention resolve through the embedded struct.
 type indexData struct {
-	Messages []message.Message
+	listData
 	Contacts []session.Contact
 	Session  sessionData
 }
@@ -96,7 +99,7 @@ func (s *Server) index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.render(w, "index", indexData{
-		Messages: msgs,
+		listData: listData{Messages: msgs},
 		Contacts: s.session.Contacts(r.Context()),
 		Session:  s.sessionData(),
 	})
