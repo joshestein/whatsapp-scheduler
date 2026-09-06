@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -33,6 +34,14 @@ func run(log *slog.Logger) error {
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+
+	// Bind the port before touching the database or the WhatsApp session. If
+	// another instance is running (the launchd agent, say) this fails here, and
+	// two processes never share one session.
+	ln, err := net.Listen("tcp", cfg.ListenAddr)
+	if err != nil {
+		return err
+	}
 
 	if err := os.MkdirAll(cfg.DataDir, 0o700); err != nil {
 		return err
@@ -74,11 +83,11 @@ func run(log *slog.Logger) error {
 		return err
 	}
 
-	srv := &http.Server{Addr: cfg.ListenAddr, Handler: ui.Handler()}
+	srv := &http.Server{Handler: ui.Handler()}
 
 	go func() {
 		log.Info("listening", "addr", cfg.ListenAddr, "data_dir", cfg.DataDir)
-		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Error("http server", "err", err)
 			stop()
 		}
