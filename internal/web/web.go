@@ -4,7 +4,6 @@ import (
 	"context"
 	"embed"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"html/template"
 	"log/slog"
@@ -158,7 +157,7 @@ func (s *Server) deleteMessage(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if err := s.store.Delete(r.Context(), id); err != nil && !errors.Is(err, store.ErrNotFound) {
+	if err := s.store.Delete(r.Context(), id); err != nil {
 		s.fail(w, "delete message", err)
 		return
 	}
