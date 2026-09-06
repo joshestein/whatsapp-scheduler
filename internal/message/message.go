@@ -18,6 +18,7 @@ type Message struct {
 	RecipientName  string
 	Body           string
 	SendAt         time.Time
+	SendZone       string // IANA name of the zone the message was created in; empty means the machine's local zone
 	State          State
 	Error          string
 	SentAt         *time.Time
@@ -27,6 +28,32 @@ type Message struct {
 
 func (m Message) IsDue(now time.Time) bool {
 	return !now.Before(m.SendAt)
+}
+
+// location is the zone the message was created in, falling back to the
+// machine's local zone when the stored name is empty or unknown.
+func (m Message) location() *time.Location {
+	if m.SendZone != "" {
+		if loc, err := time.LoadLocation(m.SendZone); err == nil {
+			return loc
+		}
+	}
+	return time.Local
+}
+
+// SendAtZoned is the send instant rendered in its creation zone.
+func (m Message) SendAtZoned() time.Time {
+	return m.SendAt.In(m.location())
+}
+
+// ZoneLabel names the creation zone for display (e.g. "Africa/Johannesburg"),
+// or the zone abbreviation when only the local fallback is known.
+func (m Message) ZoneLabel() string {
+	if m.SendZone != "" {
+		return m.SendZone
+	}
+	name, _ := m.SendAtZoned().Zone()
+	return name
 }
 
 func (m Message) PastGrace(now time.Time, grace time.Duration) bool {

@@ -150,6 +150,7 @@ func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
 		RecipientName: name,
 		Body:          body,
 		SendAt:        sendAt.UTC(),
+		SendZone:      zone,
 	}, time.Now())
 	if err != nil {
 		s.fail(w, "create message", err)
