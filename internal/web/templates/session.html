@@ -5,6 +5,9 @@
     <img src="{{.QR}}" alt="Pairing QR code" width="256" height="256" />
     {{else if eq .State "logged out"}}
     <p>Restart the app to pair again.</p>
+    {{else if .Paired}}
+    <!-- Contacts sync from the phone over the first minute after pairing. -->
+    <p>Paired. Reload the page in a minute to load your contacts.</p>
     {{end}}
 </div>
 {{end}}
