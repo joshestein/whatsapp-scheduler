@@ -194,3 +194,59 @@ td button {
 td button:hover {
     background: #f0f0ee;
 }
+
+.field {
+    display: grid;
+    gap: 0.25rem;
+}
+
+.combobox {
+    position: relative;
+}
+
+.combobox input {
+    width: 100%;
+}
+
+.combobox [role="listbox"] {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    margin: 0.25rem 0 0;
+    padding: 0;
+    list-style: none;
+    max-height: 16rem;
+    overflow-y: scroll;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.combobox [role="option"] {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.4rem 0.6rem;
+    cursor: pointer;
+}
+
+/* display: flex above beats the browser's [hidden] rule; restore it for filtered-out rows */
+.combobox [role="option"][hidden] {
+    display: none;
+}
+
+.combobox [role="option"]:hover,
+.combobox [role="option"][aria-selected="true"] {
+    background: #eef7f5;
+}
+
+.combobox .muted {
+    color: var(--muted);
+    font-size: 0.875rem;
+}
+
+.combobox.selected input {
+    border-color: var(--accent);
+}
