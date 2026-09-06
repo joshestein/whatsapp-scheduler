@@ -20,34 +20,26 @@ func ParseSchedule(rest string) (Schedule, error) {
 		if line == "" {
 			continue
 		}
-
 		m := label.FindStringSubmatch(line)
 		if m == nil {
-			break
+			break // header closed
 		}
-
 		key := strings.ToLower(m[1])
 		if _, dup := fields[key]; dup {
 			return Schedule{}, Reject{title(key) + ": given twice"}
 		}
-
 		fields[key] = strings.TrimSpace(m[2])
 	}
-
 	for _, key := range []string{"to", "at"} {
 		if fields[key] == "" {
 			return Schedule{}, Reject{title(key) + ": not found"}
 		}
 	}
-
 	body := strings.TrimSpace(strings.Join(lines[i:], "\n"))
 	if body == "" {
 		return Schedule{}, Reject{"body empty"}
 	}
-
 	return Schedule{To: fields["to"], At: fields["at"], Body: body}, nil
 }
 
-func title(key string) string {
-	return strings.ToUpper(key[:1]) + key[1:]
-}
+func title(key string) string { return strings.ToUpper(key[:1]) + key[1:] }

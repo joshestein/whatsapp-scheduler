@@ -12,7 +12,6 @@ func Verb(text string) (verb, rest string) {
 	if !strings.HasPrefix(text, "/") {
 		return "", ""
 	}
-
 	first, rest, _ := strings.Cut(text, "\n")
 	word, inline, _ := strings.Cut(first, " ")
 	verb = strings.ToLower(strings.TrimPrefix(word, "/"))
