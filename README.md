@@ -16,7 +16,15 @@ number can be banned. Use at your own risk. See `docs/adr/`.
 - SQLite, one file for app data and the WhatsApp session
 - `net/http` + `html/template` + htmx, no JS build step
 
-## Run it
+## Requirements
+
+- Go 1.26 or later (`go.mod` sets the version; `GOTOOLCHAIN=auto` fetches it if
+  your local Go is older)
+- `make`
+- macOS for the launchd install below. Linux runs the binary fine; a systemd
+  unit is planned under `deploy/`.
+
+## Run it from source
 
 ```
 make run
