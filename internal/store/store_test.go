@@ -120,3 +120,15 @@ func TestRecoverSending(t *testing.T) {
 		t.Fatalf("got %+v", got)
 	}
 }
+
+func TestDeleteOnlyPending(t *testing.T) {
+	s := open(t)
+	ctx := context.Background()
+	m := create(t, s, now)
+	if _, err := s.BeginSending(ctx, now); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Delete(ctx, m.ID); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("delete sending = %v, want ErrNotFound", err)
+	}
+}

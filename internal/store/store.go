@@ -159,6 +159,11 @@ func (s *Store) RecoverSending(ctx context.Context) (int64, error) {
 	return res.RowsAffected()
 }
 
+// Only pending messages are deleted.
+func (s *Store) Delete(ctx context.Context, id int64) error {
+	return s.affectOne(ctx, `DELETE FROM messages WHERE id = ? AND state = ?`, id, message.Pending)
+}
+
 // affectOne runs a single-row write and reports a non-match as ErrNotFound.
 // Only for queries filtered on id.
 func (s *Store) affectOne(ctx context.Context, query string, args ...any) error {
