@@ -48,7 +48,7 @@ Ticks do not overlap. The next tick is scheduled after the current one finishes.
 
 ## Time
 
-Send times are stored as UTC. The UI shows and accepts times in the machine's local timezone.
+A send time is an instant plus the time zone it was created in. The browser supplies the zone. The UI accepts and shows the time in that creation zone, with the zone named (e.g. `Africa/Johannesburg`), the same on any viewing device. The instant is kept in UTC; the Scheduler and Grace Window act on the instant alone, so the zone never affects timing.
 
 ## Ban risk
 
