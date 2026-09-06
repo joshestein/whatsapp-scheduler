@@ -161,27 +161,27 @@ func (s *Server) renderList(w http.ResponseWriter, r *http.Request) {
 	s.render(w, "list", listData{Messages: msgs})
 }
 
-// An unparseable id names nothing, so there is nothing to do. Both handlers
-// fall through to the list, which shows the current truth either way.
-
-func (s *Server) deleteMessage(w http.ResponseWriter, r *http.Request) {
+// mutate parses the path id and applies op to it, then renders the list. An
+// unparseable id names nothing, so there is nothing to do: both handlers fall
+// through to the list, which shows the current truth either way.
+func (s *Server) mutate(w http.ResponseWriter, r *http.Request, what string, op func(context.Context, int64) error) {
 	if id, err := strconv.ParseInt(r.PathValue("id"), 10, 64); err == nil {
-		if err := s.store.Delete(r.Context(), id); err != nil {
-			s.fail(w, "delete message", err)
+		if err := op(r.Context(), id); err != nil {
+			s.fail(w, what, err)
 			return
 		}
 	}
 	s.renderList(w, r)
 }
 
+func (s *Server) deleteMessage(w http.ResponseWriter, r *http.Request) {
+	s.mutate(w, r, "delete message", s.store.Delete)
+}
+
 func (s *Server) ackMessage(w http.ResponseWriter, r *http.Request) {
-	if id, err := strconv.ParseInt(r.PathValue("id"), 10, 64); err == nil {
-		if err := s.store.Acknowledge(r.Context(), id, time.Now()); err != nil {
-			s.fail(w, "acknowledge message", err)
-			return
-		}
-	}
-	s.renderList(w, r)
+	s.mutate(w, r, "acknowledge message", func(ctx context.Context, id int64) error {
+		return s.store.Acknowledge(ctx, id, time.Now())
+	})
 }
 
 // contactName returns the known name for jid, or jid itself when unknown.
