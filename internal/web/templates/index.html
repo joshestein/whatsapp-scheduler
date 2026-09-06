@@ -7,7 +7,7 @@
         <!-- Swap 422 so validation errors from POST /messages reach #form-error. Other 4xx/5xx stay unswapped. -->
         <meta
             name="htmx-config"
-            content='{"responseHandling":[{"code":"422","swap":true},{"code":"[23]..","swap":true},{"code":"[45]..","swap":false,"error":true}]}'
+            content='{"responseHandling":[{"code":"422","swap":true,"error":true},{"code":"[23]..","swap":true},{"code":"[45]..","swap":false,"error":true}]}'
         />
         <script src="/static/htmx.min.js"></script>
         <link rel="stylesheet" href="/static/style.css" />
