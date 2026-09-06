@@ -132,3 +132,22 @@ func TestDeleteOnlyPending(t *testing.T) {
 		t.Fatalf("delete sending = %v, want ErrNotFound", err)
 	}
 }
+
+func TestAcknowledgeIsIdempotent(t *testing.T) {
+	s := open(t)
+	ctx := context.Background()
+	m := create(t, s, now.Add(-time.Hour))
+	if _, err := s.MarkMissed(ctx, now, 30*time.Minute); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Acknowledge(ctx, m.ID, now); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Acknowledge(ctx, m.ID, now.Add(time.Hour)); err != nil {
+		t.Fatalf("second ack = %v, want nil", err)
+	}
+	got, _ := s.Get(ctx, m.ID)
+	if got.NeedsAck() || !got.AcknowledgedAt.Equal(now) {
+		t.Fatalf("got ack at %v, want first timestamp %v", got.AcknowledgedAt, now)
+	}
+}

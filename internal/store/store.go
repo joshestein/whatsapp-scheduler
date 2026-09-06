@@ -164,6 +164,15 @@ func (s *Store) Delete(ctx context.Context, id int64) error {
 	return s.affectOne(ctx, `DELETE FROM messages WHERE id = ? AND state = ?`, id, message.Pending)
 }
 
+// Acknowledge dismisses the badge on a missed or failed message.
+func (s *Store) Acknowledge(ctx context.Context, id int64, now time.Time) error {
+	_, err := s.db.ExecContext(ctx, `
+		UPDATE messages SET acknowledged_at = COALESCE(acknowledged_at, ?)
+		WHERE id = ? AND state IN (?, ?)`,
+		now.Unix(), id, message.Missed, message.Failed)
+	return err
+}
+
 // affectOne runs a single-row write and reports a non-match as ErrNotFound.
 // Only for queries filtered on id.
 func (s *Store) affectOne(ctx context.Context, query string, args ...any) error {
