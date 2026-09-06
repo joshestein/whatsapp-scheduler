@@ -45,6 +45,7 @@ Config is by environment variable:
 ## Build
 
 ```
-make build              # local binary
-make build-linux-arm64  # for the home box (systemd), see deploy/
+make build              # local binary in the repo root
+make build-linux-arm64  # for a home box (systemd), see deploy/
+make test
 ```
