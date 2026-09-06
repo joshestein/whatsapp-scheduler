@@ -1,39 +1,55 @@
 {{define "list"}}
-<table id="messages">
-    <thead>
-        <tr>
-            <th>Send at</th>
-            <th>To</th>
-            <th>Message</th>
-            <th>State</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        {{range .Messages}}
-        <tr>
-            <td>{{.SendAt.Local.Format "Mon 02 Jan 15:04"}}</td>
-            <td>{{.RecipientName}}</td>
-            <td>{{.Body}}</td>
-            <td>{{.State}}</td>
-            <td>
-                {{if eq .State "pending"}}
-                <button
-                    hx-delete="/messages/{{.ID}}"
-                    hx-target="#messages"
-                    hx-swap="outerHTML"
-                    hx-confirm="Cancel this message?"
-                >
-                    Cancel
-                </button>
-                {{end}}
-            </td>
-        </tr>
-        {{else}}
-        <tr>
-            <td colspan="4">Nothing scheduled.</td>
-        </tr>
-        {{end}}
-    </tbody>
-</table>
+<div id="messages">
+    {{if .Attention}}
+    <p class="badge">{{.Attention}} message(s) need attention</p>
+    {{end}}
+    <table>
+        <thead>
+            <tr>
+                <th>Send at</th>
+                <th>To</th>
+                <th>Message</th>
+                <th>State</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Messages}}
+            <tr class="state-{{.State}}{{if .NeedsAck}} attention{{end}}">
+                <td>{{.SendAt.Local.Format "Mon 02 Jan 15:04"}}</td>
+                <td>{{.RecipientName}}</td>
+                <td>{{.Body}}</td>
+                <td>
+                    {{.State}} {{if .Error}}<br /><small>{{.Error}}</small
+                    >{{end}}
+                </td>
+                <td>
+                    {{if eq .State "pending"}}
+                    <button
+                        hx-delete="/messages/{{.ID}}"
+                        hx-target="#messages"
+                        hx-swap="outerHTML"
+                        hx-confirm="Cancel this message?"
+                    >
+                        Cancel
+                    </button>
+                    {{else if .NeedsAck}}
+                    <button
+                        hx-post="/messages/{{.ID}}/ack"
+                        hx-target="#messages"
+                        hx-swap="outerHTML"
+                    >
+                        Dismiss
+                    </button>
+                    {{end}}
+                </td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="5">Nothing scheduled.</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
 {{end}}
