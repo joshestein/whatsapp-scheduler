@@ -45,6 +45,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /{$}", s.index)
 	mux.HandleFunc("POST /messages", s.createMessage)
 	mux.HandleFunc("DELETE /messages/{id}", s.deleteMessage)
+	mux.HandleFunc("POST /messages/{id}/ack", s.ackMessage)
 	mux.HandleFunc("GET /session", s.sessionPartial)
 	mux.HandleFunc("GET /healthz", s.healthz)
 	return mux
@@ -159,6 +160,18 @@ func (s *Server) deleteMessage(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := s.store.Delete(r.Context(), id); err != nil {
 		s.fail(w, "delete message", err)
+		return
+	}
+	s.renderList(w, r)
+}
+
+func (s *Server) ackMessage(w http.ResponseWriter, r *http.Request) {
+	id, ok := s.messageId(w, r)
+	if !ok {
+		return
+	}
+	if err := s.store.Acknowledge(r.Context(), id, time.Now()); err != nil {
+		s.fail(w, "acknowledge message", err)
 		return
 	}
 	s.renderList(w, r)
