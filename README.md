@@ -50,11 +50,11 @@ Data (database and WhatsApp session) lives in the platform config directory,
 `~/.config/whatsapp-scheduler` on Linux. `make run` and the installed agent
 below share it, so you pair once.
 
-## Install (runs at login)
+## Install from source (runs at login)
 
-Installs the binary to `~/.local/bin` and a user service that starts it at
-login and restarts it if it exits. No sudo. `make` picks the service manager
-from `uname`: launchd on macOS, a systemd user unit on Linux.
+Builds, then runs `install.sh --local` with the fresh binary. Same install as
+above, minus the download: binary in `~/.local/bin`, launchd on macOS, a
+systemd user unit on Linux. No sudo.
 
 ```
 make install
