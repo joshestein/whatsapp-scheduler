@@ -148,35 +148,25 @@ func (s *Server) renderList(w http.ResponseWriter, r *http.Request) {
 	s.render(w, "list", listData{Messages: msgs})
 }
 
-func (s *Server) messageId(w http.ResponseWriter, r *http.Request) (int64, bool) {
-	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
-	if err != nil {
-		http.Error(w, "bad id", http.StatusBadRequest)
-		return 0, false
-	}
-	return id, true
-}
+// An unparseable id names nothing, so there is nothing to do. Both handlers
+// fall through to the list, which shows the current truth either way.
 
 func (s *Server) deleteMessage(w http.ResponseWriter, r *http.Request) {
-	id, ok := s.messageId(w, r)
-	if !ok {
-		return
-	}
-	if err := s.store.Delete(r.Context(), id); err != nil {
-		s.fail(w, "delete message", err)
-		return
+	if id, err := strconv.ParseInt(r.PathValue("id"), 10, 64); err == nil {
+		if err := s.store.Delete(r.Context(), id); err != nil {
+			s.fail(w, "delete message", err)
+			return
+		}
 	}
 	s.renderList(w, r)
 }
 
 func (s *Server) ackMessage(w http.ResponseWriter, r *http.Request) {
-	id, ok := s.messageId(w, r)
-	if !ok {
-		return
-	}
-	if err := s.store.Acknowledge(r.Context(), id, time.Now()); err != nil {
-		s.fail(w, "acknowledge message", err)
-		return
+	if id, err := strconv.ParseInt(r.PathValue("id"), 10, 64); err == nil {
+		if err := s.store.Acknowledge(r.Context(), id, time.Now()); err != nil {
+			s.fail(w, "acknowledge message", err)
+			return
+		}
 	}
 	s.renderList(w, r)
 }
