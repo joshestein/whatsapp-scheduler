@@ -185,11 +185,11 @@ func (s *Server) ackMessage(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// contactName returns the known name for jid, or jid itself when unknown.
+// contactName returns the known primary name for jid, or jid itself when unknown.
 func (s *Server) contactName(ctx context.Context, jid string) string {
 	for _, c := range s.session.Contacts(ctx) {
 		if c.JID == jid {
-			return c.Name
+			return c.Primary
 		}
 	}
 	return jid
