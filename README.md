@@ -65,6 +65,14 @@ make uninstall  # stop the agent, remove it and the binary; data is kept
 tail -f ~/Library/Logs/whatsapp-scheduler.log
 ```
 
+Moving the data directory to another machine: stop the agent first, then copy
+the database with SQLite's own backup, never with `cp`. The file is in WAL
+mode and a plain copy of a recently used database is corrupt.
+
+```
+sqlite3 "$HOME/Library/Application Support/whatsapp-scheduler/scheduler.db" ".backup /path/to/scheduler.db"
+```
+
 While the agent is running, `make run` fails with "address already in use".
 That is deliberate: two processes must not share the database and session.
 Use `make restart` to test changes, or `make uninstall` first.
