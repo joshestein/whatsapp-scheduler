@@ -6,6 +6,7 @@
             <th>To</th>
             <th>Message</th>
             <th>State</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -15,6 +16,18 @@
             <td>{{.RecipientName}}</td>
             <td>{{.Body}}</td>
             <td>{{.State}}</td>
+            <td>
+                {{if eq .State "pending"}}
+                <button
+                    hx-delete="/messages/{{.ID}}"
+                    hx-target="#messages"
+                    hx-swap="outerHTML"
+                    hx-confirm="Cancel this message?"
+                >
+                    Cancel
+                </button>
+                {{end}}
+            </td>
         </tr>
         {{else}}
         <tr>
