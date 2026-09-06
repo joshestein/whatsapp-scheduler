@@ -43,7 +43,7 @@ func (s *Store) migrate(ctx context.Context) error {
 	return goose.UpContext(ctx, s.db, "migrations")
 }
 
-const columns = `id, recipient_jid, recipient_name, body, send_at, state, error, sent_at, acknowledged_at, created_at`
+const columns = `id, recipient_jid, recipient_name, body, send_at, send_zone, state, error, sent_at, acknowledged_at, created_at`
 
 type scanner interface {
 	Scan(dest ...any) error
@@ -56,7 +56,7 @@ func scanMessage(r scanner) (message.Message, error) {
 		errStr          sql.NullString
 		sentAt, ackAt   sql.NullInt64
 	)
-	err := r.Scan(&m.ID, &m.RecipientJID, &m.RecipientName, &m.Body, &sendAt, &m.State, &errStr, &sentAt, &ackAt, &created)
+	err := r.Scan(&m.ID, &m.RecipientJID, &m.RecipientName, &m.Body, &sendAt, &m.SendZone, &m.State, &errStr, &sentAt, &ackAt, &created)
 	if err != nil {
 		return m, err
 	}
@@ -90,10 +90,10 @@ func scanMessages(rows *sql.Rows) ([]message.Message, error) {
 
 func (s *Store) Create(ctx context.Context, m message.Message, now time.Time) (message.Message, error) {
 	row := s.db.QueryRowContext(ctx, `
-		INSERT INTO messages (recipient_jid, recipient_name, body, send_at, state, created_at)
-		VALUES (?, ?, ?, ?, ?, ?)
+		INSERT INTO messages (recipient_jid, recipient_name, body, send_at, send_zone, state, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 		RETURNING `+columns,
-		m.RecipientJID, m.RecipientName, m.Body, m.SendAt.Unix(), message.Pending, now.Unix())
+		m.RecipientJID, m.RecipientName, m.Body, m.SendAt.Unix(), m.SendZone, message.Pending, now.Unix())
 	return scanMessage(row)
 }
 

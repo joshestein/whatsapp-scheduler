@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"syscall"
 	"time"
+	_ "time/tzdata" // embed the IANA zone db so LoadLocation works on any box
 
 	"github.com/joshestein/whatsapp-scheduler/internal/config"
 	"github.com/joshestein/whatsapp-scheduler/internal/scheduler"
