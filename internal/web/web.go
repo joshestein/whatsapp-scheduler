@@ -85,11 +85,11 @@ func (s *Server) index(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, "list messages", err)
 		return
 	}
-	contacts, err := s.session.Contacts(r.Context())
-	if err != nil {
-		s.log.Warn("contacts", "err", err) // page still renders, datalist empty
-	}
-	s.render(w, "index", indexData{Messages: msgs, Contacts: contacts, Session: s.sessionData()})
+	s.render(w, "index", indexData{
+		Messages: msgs,
+		Contacts: s.session.Contacts(r.Context()),
+		Session:  s.sessionData(),
+	})
 }
 
 func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
@@ -183,11 +183,7 @@ func (s *Server) ackMessage(w http.ResponseWriter, r *http.Request) {
 
 // contactName returns the known name for jid, or jid itself when unknown.
 func (s *Server) contactName(ctx context.Context, jid string) string {
-	contacts, err := s.session.Contacts(ctx)
-	if err != nil {
-		return jid
-	}
-	for _, c := range contacts {
+	for _, c := range s.session.Contacts(ctx) {
 		if c.JID == jid {
 			return c.Name
 		}

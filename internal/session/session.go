@@ -97,15 +97,15 @@ func (s *Session) Send(ctx context.Context, jid, text string) error {
 }
 
 // Contacts returns people and joined groups sorted by name, with the user first.
-func (s *Session) Contacts(ctx context.Context) ([]Contact, error) {
+func (s *Session) Contacts(ctx context.Context) []Contact {
 	// Read once: whatsmeow sets Store.ID to nil on LoggedOut, from its own goroutine.
 	id := s.client.Store.ID
 	if id == nil {
-		return nil, nil
+		return nil
 	}
 	all, err := s.client.Store.Contacts.GetAllContacts(ctx)
 	if err != nil {
-		return nil, err
+		s.log.Warn("contacts", "err", err)
 	}
 	out := make([]Contact, 0, len(all))
 	for jid, c := range all {
@@ -128,7 +128,7 @@ func (s *Session) Contacts(ctx context.Context) ([]Contact, error) {
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	me := Contact{JID: id.ToNonAD().String(), Name: "Me"}
-	return append([]Contact{me}, out...), nil
+	return append([]Contact{me}, out...)
 }
 
 func (s *Session) run(ctx context.Context) {
