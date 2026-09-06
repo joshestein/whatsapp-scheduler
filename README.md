@@ -6,7 +6,8 @@ It logs in to WhatsApp Web with your account (QR scan, once) and persists the
 session. You pick a contact, write a message and set a send time.
 
 This is a personal, single-user tool. It uses an unofficial WhatsApp client
-library, not the official Business API. Use at your own risk.
+library, not the official Business API. WhatsApp's terms forbid this and the
+number can be banned. Use at your own risk. See `docs/adr/`.
 
 ## Stack
 
