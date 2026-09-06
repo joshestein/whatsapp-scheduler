@@ -37,7 +37,7 @@ func normaliseRecipient(input string) (string, error) {
 		if jid.User == "" || strings.Trim(jid.User, "0123456789") != "" {
 			return "", errBadRecipient
 		}
-	case types.GroupServer, types.HiddenUserServer:
+	case types.GroupServer:
 	default:
 		return "", errBadRecipient
 	}
