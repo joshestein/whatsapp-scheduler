@@ -139,13 +139,15 @@ func (s *Store) MarkMissed(ctx context.Context, now time.Time, grace time.Durati
 }
 
 func (s *Store) MarkSent(ctx context.Context, id int64, now time.Time) error {
-	return s.affectOne(ctx, `UPDATE messages SET state = ?, sent_at = ? WHERE id = ? AND state = ?`,
+	_, err := s.db.ExecContext(ctx, `UPDATE messages SET state = ?, sent_at = ? WHERE id = ? AND state = ?`,
 		message.Sent, now.Unix(), id, message.Sending)
+	return err
 }
 
 func (s *Store) MarkFailed(ctx context.Context, id int64, reason string) error {
-	return s.affectOne(ctx, `UPDATE messages SET state = ?, error = ? WHERE id = ? AND state = ?`,
+	_, err := s.db.ExecContext(ctx, `UPDATE messages SET state = ?, error = ? WHERE id = ? AND state = ?`,
 		message.Failed, reason, id, message.Sending)
+	return err
 }
 
 // RecoverSending runs once at startup. A row still in sending was in flight
@@ -161,7 +163,8 @@ func (s *Store) RecoverSending(ctx context.Context) (int64, error) {
 
 // Only pending messages are deleted.
 func (s *Store) Delete(ctx context.Context, id int64) error {
-	return s.affectOne(ctx, `DELETE FROM messages WHERE id = ? AND state = ?`, id, message.Pending)
+	_, err := s.db.ExecContext(ctx, `DELETE FROM messages WHERE id = ? AND state = ?`, id, message.Pending)
+	return err
 }
 
 // Acknowledge dismisses the badge on a missed or failed message.
@@ -171,21 +174,4 @@ func (s *Store) Acknowledge(ctx context.Context, id int64, now time.Time) error 
 		WHERE id = ? AND state IN (?, ?)`,
 		now.Unix(), id, message.Missed, message.Failed)
 	return err
-}
-
-// affectOne runs a single-row write and reports a non-match as ErrNotFound.
-// Only for queries filtered on id.
-func (s *Store) affectOne(ctx context.Context, query string, args ...any) error {
-	res, err := s.db.ExecContext(ctx, query, args...)
-	if err != nil {
-		return err
-	}
-	n, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if n == 0 {
-		return ErrNotFound
-	}
-	return nil
 }
