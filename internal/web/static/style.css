@@ -95,7 +95,7 @@ button:hover {
 }
 
 #form-error {
-    color: #c0392b;
+    color: var(--error);
     margin: 0;
     font-size: 0.875rem;
 }
@@ -133,31 +133,49 @@ tr:last-child td {
     border-bottom: 0;
 }
 
-/* Missed / failed messages that have not been dismissed */
+/* Missed = timing failure (warning). Failed = delivery failure (error). CONTEXT.md */
+
+:root {
+    --warn: #b7791f;
+    --warn-bg: #fff8e6;
+    --error: #c0392b;
+    --error-bg: #fff8f7;
+}
 
 .badge {
     display: inline-block;
     margin: 0 0 0.75rem;
     padding: 0.35rem 0.75rem;
     border-radius: 999px;
-    background: #fdecea;
-    color: #c0392b;
+    background: var(--warn-bg);
+    color: var(--warn);
+    border: 1px solid #f0d9a0;
     font-size: 0.875rem;
     font-weight: 600;
-}
-
-tr.attention td {
-    background: #fff8f7;
 }
 
 tr.state-sent td:nth-child(4) {
     color: var(--accent);
 }
 
-tr.state-missed td:nth-child(4),
-tr.state-failed td:nth-child(4) {
-    color: #c0392b;
+tr.state-missed td:nth-child(4) {
+    color: var(--warn);
     font-weight: 600;
+}
+
+tr.state-failed td:nth-child(4) {
+    color: var(--error);
+    font-weight: 600;
+}
+
+/* Undismissed rows get a tint in their own severity */
+
+tr.attention.state-missed td {
+    background: var(--warn-bg);
+}
+
+tr.attention.state-failed td {
+    background: var(--error-bg);
 }
 
 td small {
