@@ -21,8 +21,7 @@ number can be banned. Use at your own risk. See `docs/adr/`.
 - Go 1.26 or later (`go.mod` sets the version; `GOTOOLCHAIN=auto` fetches it if
   your local Go is older)
 - `make`
-- macOS for the launchd install below. Linux runs the binary fine; a systemd
-  unit is planned under `deploy/`.
+- macOS (launchd) or Linux with systemd, for the install below
 
 ## Run it from source
 
@@ -38,10 +37,11 @@ Data (database and WhatsApp session) lives in the platform config directory,
 `~/.config/whatsapp-scheduler` on Linux. `make run` and the installed agent
 below share it, so you pair once.
 
-## Install on macOS (runs at login)
+## Install (runs at login)
 
-Installs the binary to `~/.local/bin` and a launchd user agent that starts it
-at login and restarts it if it exits. No sudo.
+Installs the binary to `~/.local/bin` and a user service that starts it at
+login and restarts it if it exits. No sudo. `make` picks the service manager
+from `uname`: launchd on macOS, a systemd user unit on Linux.
 
 ```
 make install
@@ -50,22 +50,30 @@ make install
 Then open <http://127.0.0.1:20648>. If you already paired via `make run`, it is
 already connected.
 
-| | Path |
-|---|---|
-| Binary | `~/.local/bin/whatsapp-scheduler` |
-| Agent | `~/Library/LaunchAgents/com.joshestein.whatsapp-scheduler.plist` |
-| Data | `~/Library/Application Support/whatsapp-scheduler/` |
-| Log | `~/Library/Logs/whatsapp-scheduler.log` |
+| | macOS | Linux |
+|---|---|---|
+| Binary | `~/.local/bin/whatsapp-scheduler` | same |
+| Service | `~/Library/LaunchAgents/com.joshestein.whatsapp-scheduler.plist` | `~/.config/systemd/user/whatsapp-scheduler.service` |
+| Data | `~/Library/Application Support/whatsapp-scheduler/` | `~/.config/whatsapp-scheduler/` |
+| Log | `~/Library/Logs/whatsapp-scheduler.log` | `journalctl --user -u whatsapp-scheduler` |
+
+On Linux a user service stops at logout. For a headless box, turn on
+lingering once so it keeps running:
+
+```
+loginctl enable-linger
+```
 
 Day to day:
 
 ```
-make restart    # rebuild, reinstall the binary, restart the agent
-make uninstall  # stop the agent, remove it and the binary; data is kept
-tail -f ~/Library/Logs/whatsapp-scheduler.log
+make restart    # rebuild, reinstall the binary, restart the service
+make uninstall  # stop the service, remove it and the binary; data is kept
+tail -f ~/Library/Logs/whatsapp-scheduler.log         # macOS
+journalctl --user -u whatsapp-scheduler -f            # Linux
 ```
 
-Moving the data directory to another machine: stop the agent first, then copy
+Moving the data directory to another machine: stop the service first, then copy
 the database with SQLite's own backup, never with `cp`. The file is in WAL
 mode and a plain copy of a recently used database is corrupt.
 
@@ -73,13 +81,15 @@ mode and a plain copy of a recently used database is corrupt.
 sqlite3 "$HOME/Library/Application Support/whatsapp-scheduler/scheduler.db" ".backup /path/to/scheduler.db"
 ```
 
-While the agent is running, `make run` fails with "address already in use".
+While the service is running, `make run` fails with "address already in use".
 That is deliberate: two processes must not share the database and session.
 Use `make restart` to test changes, or `make uninstall` first.
 
 ## Configuration
 
-By environment variable. The defaults are what the launchd agent uses.
+By environment variable. The defaults are what the installed service uses.
+On Linux, override with a drop-in: `systemctl --user edit whatsapp-scheduler`
+and add `Environment=LISTEN_ADDR=...` under `[Service]`.
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -92,6 +102,6 @@ By environment variable. The defaults are what the launchd agent uses.
 
 ```
 make build              # local binary in the repo root
-make build-linux-arm64  # for a home box (systemd), see deploy/
+make build-linux-arm64  # cross-compile for an arm64 box; run `make install` there
 make test
 ```
