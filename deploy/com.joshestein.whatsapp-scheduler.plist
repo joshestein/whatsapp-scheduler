@@ -10,13 +10,8 @@
         <string>__HOME__/.local/bin/whatsapp-scheduler</string>
     </array>
 
-    <key>EnvironmentVariables</key>
-    <dict>
-        <key>DATA_DIR</key>
-        <string>__HOME__/Library/Application Support/whatsapp-scheduler</string>
-        <key>LISTEN_ADDR</key>
-        <string>127.0.0.1:20648</string>
-    </dict>
+    <!-- No EnvironmentVariables: the app's defaults are the intended values.
+         DATA_DIR = ~/Library/Application Support/whatsapp-scheduler, LISTEN_ADDR = 127.0.0.1:20648 -->
 
     <!-- Start at login, restart whenever the process exits. -->
     <key>RunAtLoad</key>
