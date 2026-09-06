@@ -1,0 +1,57 @@
+name: release
+
+# Build binaries for macOS and Linux when a version tag is pushed, then
+# attach them to a GitHub release. CGO is off (pure-Go SQLite via
+# modernc.org/sqlite), so one Linux runner cross-compiles every target.
+#
+# Cut a release:
+#   git tag v0.1.0 && git push origin v0.1.0
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build
+        env:
+          CGO_ENABLED: "0"
+        run: |
+          mkdir -p dist
+          for target in darwin/amd64 darwin/arm64 linux/amd64 linux/arm64; do
+            os="${target%/*}"
+            arch="${target#*/}"
+            out="dist/whatsapp-scheduler-${os}-${arch}"
+            echo "building ${out}"
+            GOOS="$os" GOARCH="$arch" go build \
+              -trimpath \
+              -ldflags "-s -w" \
+              -o "$out" ./cmd/whatsapp-scheduler
+          done
+
+      - name: Checksums
+        run: |
+          cd dist
+          sha256sum whatsapp-scheduler-* > checksums.txt
+          cat checksums.txt
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes \
+            dist/whatsapp-scheduler-* dist/checksums.txt
