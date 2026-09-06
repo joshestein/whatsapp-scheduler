@@ -97,7 +97,11 @@ func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
 		s.formError(w, "bad form")
 		return
 	}
-	jid := strings.TrimSpace(r.PostForm.Get("recipient_jid"))
+	jid, err := normaliseRecipient(r.PostForm.Get("recipient_jid"))
+	if err != nil {
+		s.formError(w, "invalid recipient: enter a phone number with country code, or pick a contact")
+		return
+	}
 	body := strings.TrimSpace(r.PostForm.Get("body"))
 	if jid == "" || body == "" {
 		s.formError(w, "recipient and message are required")
