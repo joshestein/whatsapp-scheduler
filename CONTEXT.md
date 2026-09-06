@@ -12,6 +12,10 @@ Domain language for the WhatsApp Scheduler. One word, one meaning.
 
 **Send** — the act of delivering a Scheduled Message through the live Session.
 
+**Command Channel** — one WhatsApp group, set by config (its JID), that the app watches. The user sends **Commands** there. The app acts only on messages from the user's own number (`IsFromMe`).
+
+**Command** — a message in the Command Channel that starts with `/verb`. v1 has one verb, `/schedule`, which creates a Scheduled Message. The verb space is open for later (`/list`, `/cancel`, `/failed`), but the dashboard stays the source of truth for the list, cancel, and missed/failed; chat verbs are added only where opening the dashboard is real friction. A message that does not start with `/` is not a Command and is ignored.
+
 **Grace Window** — 30 minutes after the send time. Inside it, a late Send is acceptable. Past it, the message becomes Missed.
 
 **Missed** — not attempted inside its Grace Window (machine asleep, Session down). Never sent. Timing failure.
