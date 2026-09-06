@@ -21,7 +21,7 @@ library, not the official Business API. Use at your own risk.
 make run
 ```
 
-Serves on `127.0.0.1:8080` by default. On first run, scan the printed QR
+Serves on `127.0.0.1:20648` by default. On first run, scan the printed QR
 code with WhatsApp on your phone.
 
 Config is by environment variable:
@@ -29,7 +29,7 @@ Config is by environment variable:
 | Variable | Default | Purpose |
 |---|---|---|
 | `DATA_DIR` | `./data` | Where the database file lives |
-| `LISTEN_ADDR` | `127.0.0.1:8080` | HTTP listen address |
+| `LISTEN_ADDR` | `127.0.0.1:20648` | HTTP listen address |
 | `TICK` | `60s` | Scheduler poll interval |
 | `GRACE_WINDOW` | `30m` | How late a send may run before it counts as missed |
 

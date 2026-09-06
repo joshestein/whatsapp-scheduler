@@ -15,7 +15,7 @@ type Config struct {
 func Load() Config {
 	return Config{
 		DataDir:     env("DATA_DIR", "data"),
-		ListenAddr:  env("LISTEN_ADDR", "127.0.0.1:8080"),
+		ListenAddr:  env("LISTEN_ADDR", "127.0.0.1:20648"),
 		Tick:        duration("TICK", 60*time.Second),
 		GraceWindow: duration("GRACE_WINDOW", 30*time.Minute),
 	}
