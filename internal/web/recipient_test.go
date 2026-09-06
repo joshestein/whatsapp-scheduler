@@ -11,7 +11,7 @@ func TestNormaliseRecipient(t *testing.T) {
 		{"+27 123 456", "27123456@s.whatsapp.net", true},
 		{"2712345@s.whatsapp.net", "2712345@s.whatsapp.net", true},
 		{"120363000000000000@g.us", "120363000000000000@g.us", true},
-		{"123456789012345@lid", "123456789012345@lid", true},
+		{"123456789012345@lid", "", false},
 		{"Jo", "", false},
 		{"", "", false},
 		{"abc@s.whatsapp.net", "", false},
