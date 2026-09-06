@@ -55,6 +55,16 @@ type listData struct {
 	Messages []message.Message
 }
 
+// Attention is the number of missed or failed messages not yet dismissed.
+func (d listData) Attention() int {
+	n := 0
+	for _, m := range d.Messages {
+		if m.NeedsAck() {
+			n++
+		}
+	}
+	return n
+}
 type indexData struct {
 	Messages []message.Message
 	Contacts []session.Contact
