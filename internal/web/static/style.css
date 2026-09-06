@@ -137,8 +137,6 @@ tr:last-child td {
     border-bottom: 0;
 }
 
-/* Missed = timing failure (warning). Failed = delivery failure (error). CONTEXT.md */
-
 .badge {
     display: inline-block;
     margin: 0 0 0.75rem;
