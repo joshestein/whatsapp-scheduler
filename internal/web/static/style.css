@@ -132,3 +132,52 @@ th {
 tr:last-child td {
     border-bottom: 0;
 }
+
+/* Missed / failed messages that have not been dismissed */
+
+.badge {
+    display: inline-block;
+    margin: 0 0 0.75rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: #fdecea;
+    color: #c0392b;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+tr.attention td {
+    background: #fff8f7;
+}
+
+tr.state-sent td:nth-child(4) {
+    color: var(--accent);
+}
+
+tr.state-missed td:nth-child(4),
+tr.state-failed td:nth-child(4) {
+    color: #c0392b;
+    font-weight: 600;
+}
+
+td small {
+    display: block;
+    font-weight: 400;
+    color: var(--muted);
+    max-width: 24ch;
+    overflow-wrap: anywhere;
+}
+
+/* Row action buttons are smaller and quieter than the form's submit */
+
+td button {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8125rem;
+    background: #fff;
+    color: var(--fg);
+    border: 1px solid var(--border);
+}
+
+td button:hover {
+    background: #f0f0ee;
+}
