@@ -38,6 +38,7 @@ type Session struct {
 	cancel    context.CancelFunc // stops run(); set by Start
 	loggedOut atomic.Bool        // set by the LoggedOut event; cleared only by restart
 	qr        atomic.Value       // string; "" when no code is on offer
+	paired    atomic.Bool        // set when the phone scans a QR code in this process
 }
 
 func New(ctx context.Context, db *sql.DB, log *slog.Logger) (*Session, error) {
@@ -86,6 +87,10 @@ func (s *Session) State() State {
 func (s *Session) Connected() bool { return s.State() == Connected }
 
 func (s *Session) QR() string { return s.qr.Load().(string) }
+
+// Paired reports whether pairing happened in this process. Pages loaded before
+// the scan rendered an empty contact list; the UI uses this to ask for a reload.
+func (s *Session) Paired() bool { return s.paired.Load() }
 
 func (s *Session) Send(ctx context.Context, jid, text string) error {
 	to, err := types.ParseJID(jid)
@@ -166,6 +171,7 @@ func (s *Session) pair(ctx context.Context) bool {
 		case whatsmeow.QRChannelEventCode:
 			s.qr.Store(item.Code)
 		case whatsmeow.QRChannelSuccess.Event:
+			s.paired.Store(true)
 			return true
 		default:
 			s.log.Warn("pairing", "event", item.Event, "err", item.Error)

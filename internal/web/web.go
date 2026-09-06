@@ -75,12 +75,13 @@ type indexData struct {
 }
 
 type sessionData struct {
-	State session.State
-	QR    template.URL
+	State  session.State
+	QR     template.URL
+	Paired bool // pairing happened in this process; the page's contact list predates it
 }
 
 func (s *Server) sessionData() sessionData {
-	d := sessionData{State: s.session.State()}
+	d := sessionData{State: s.session.State(), Paired: s.session.Paired()}
 	if code := s.session.QR(); code != "" {
 		png, err := qrcode.Encode(code, qrcode.Medium, 256)
 		if err != nil {
