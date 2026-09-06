@@ -242,7 +242,7 @@ td button:hover {
     background: #eef7f5;
 }
 
-.combobox .muted {
+.muted {
     color: var(--muted);
     font-size: 0.875rem;
 }

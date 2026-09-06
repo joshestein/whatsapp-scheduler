@@ -57,13 +57,27 @@
                 </div>
             </div>
             <label
-                >Send at <input name="send_at" type="datetime-local" required
-            /></label>
+                >Send at <input name="send_at" type="datetime-local" required />
+                <small class="muted"
+                    >Times are in your zone: <span id="zone-label"></span
+                ></small>
+            </label>
+            <input type="hidden" name="send_zone" id="send_zone" />
             <label>Message <textarea name="body" required></textarea></label>
             <button type="submit">Schedule</button>
         </form>
 
         {{template "list" .}}
+
+        <script>
+            // The browser knows the user's zone; the server converts and stores it.
+            (function () {
+                var zone =
+                    Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+                document.getElementById("send_zone").value = zone;
+                document.getElementById("zone-label").textContent = zone;
+            })();
+        </script>
     </body>
 </html>
 {{end}}
