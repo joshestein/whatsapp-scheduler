@@ -16,12 +16,25 @@ number can be banned. Use at your own risk. See `docs/adr/`.
 - SQLite, one file for app data and the WhatsApp session
 - `net/http` + `html/template` + htmx, no JS build step
 
-## Requirements
+## Install
+
+macOS (Apple Silicon or Intel) or Linux (amd64 or arm64).
+
+```
+curl -fsSL https://raw.githubusercontent.com/joshestein/whatsapp-scheduler/main/install.sh | sh
+```
+
+The script downloads the release binary for your machine from GitHub
+Releases, checks its SHA-256 against the published `checksums.txt`, installs
+it to `~/.local/bin`, writes a login service (launchd on macOS, a systemd user
+unit on Linux) and starts it.
+
+## Requirements (from source)
 
 - Go 1.26 or later (`go.mod` sets the version; `GOTOOLCHAIN=auto` fetches it if
   your local Go is older)
 - `make`
-- macOS (launchd) or Linux with systemd, for the install below
+- macOS (launchd) or Linux with systemd, for `make install` below
 
 ## Run it from source
 
