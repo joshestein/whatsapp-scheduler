@@ -41,19 +41,10 @@ func (m Message) location() *time.Location {
 	return time.Local
 }
 
-// SendAtZoned is the send instant rendered in its creation zone.
+// SendAtZoned is the send instant rendered in its creation zone, so the list
+// shows the same wall-clock the user entered, whatever zone the server runs in.
 func (m Message) SendAtZoned() time.Time {
 	return m.SendAt.In(m.location())
-}
-
-// ZoneLabel names the creation zone for display (e.g. "Africa/Johannesburg"),
-// or the zone abbreviation when only the local fallback is known.
-func (m Message) ZoneLabel() string {
-	if m.SendZone != "" {
-		return m.SendZone
-	}
-	name, _ := m.SendAtZoned().Zone()
-	return name
 }
 
 func (m Message) PastGrace(now time.Time, grace time.Duration) bool {
