@@ -4,10 +4,12 @@ import (
 	"context"
 	"embed"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -43,6 +45,7 @@ func (s *Server) Handler() http.Handler {
 	mux.Handle("GET /static/", http.FileServerFS(staticFS))
 	mux.HandleFunc("GET /{$}", s.index)
 	mux.HandleFunc("POST /messages", s.createMessage)
+	mux.HandleFunc("DELETE /messages/{id}", s.deleteMessage)
 	mux.HandleFunc("GET /session", s.sessionPartial)
 	mux.HandleFunc("GET /healthz", s.healthz)
 	return mux
@@ -130,6 +133,36 @@ func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.render(w, "list", listData{Messages: msgs})
+}
+
+func (s *Server) renderList(w http.ResponseWriter, r *http.Request) {
+	msgs, err := s.store.List(r.Context())
+	if err != nil {
+		s.fail(w, "list messages", err)
+		return
+	}
+	s.render(w, "list", listData{Messages: msgs})
+}
+
+func (s *Server) messageId(w http.ResponseWriter, r *http.Request) (int64, bool) {
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "bad id", http.StatusBadRequest)
+		return 0, false
+	}
+	return id, true
+}
+
+func (s *Server) deleteMessage(w http.ResponseWriter, r *http.Request) {
+	id, ok := s.messageId(w, r)
+	if !ok {
+		return
+	}
+	if err := s.store.Delete(r.Context(), id); err != nil && !errors.Is(err, store.ErrNotFound) {
+		s.fail(w, "delete message", err)
+		return
+	}
+	s.renderList(w, r)
 }
 
 // contactName returns the known name for jid, or jid itself when unknown.
