@@ -1,0 +1,24 @@
+# systemd user unit. `make install` fills __BIN__ and copies this to
+# ~/.config/systemd/user/whatsapp-scheduler.service.
+#
+# No Environment= lines: the app's defaults are the intended values.
+# DATA_DIR = ~/.config/whatsapp-scheduler, LISTEN_ADDR = 127.0.0.1:20648
+# Override in ~/.config/systemd/user/whatsapp-scheduler.service.d/*.conf,
+# for example Environment=LISTEN_ADDR=100.x.y.z:20648 on a Tailscale box.
+#
+# A user unit stops at logout unless lingering is on: loginctl enable-linger
+
+[Unit]
+Description=WhatsApp scheduler
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=__BIN__
+# Restart whenever the process exits, with a floor between attempts to stop a
+# crash loop from spinning.
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
