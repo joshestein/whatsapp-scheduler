@@ -4,6 +4,10 @@
     --bg: #f7f7f5;
     --fg: #1a1a1a;
     --muted: #666;
+    --warn: #b7791f; /* missed: timing failure */
+    --warn-bg: #fff8e6;
+    --error: #c0392b; /* failed: delivery failure, and form errors */
+    --error-bg: #fff8f7;
 }
 
 * {
@@ -134,13 +138,6 @@ tr:last-child td {
 }
 
 /* Missed = timing failure (warning). Failed = delivery failure (error). CONTEXT.md */
-
-:root {
-    --warn: #b7791f;
-    --warn-bg: #fff8e6;
-    --error: #c0392b;
-    --error-bg: #fff8f7;
-}
 
 .badge {
     display: inline-block;
