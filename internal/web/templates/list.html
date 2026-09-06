@@ -18,7 +18,7 @@
             <tr class="state-{{.State}}{{if .NeedsAck}} attention{{end}}">
                 <td>{{.SendAtZoned.Format "Mon 02 Jan 15:04"}}</td>
                 <td>{{.RecipientName}}</td>
-                <td>{{.Body}}</td>
+                <td class="body">{{.Body}}</td>
                 <td>
                     {{.State}} {{if .Error}}<br /><small>{{.Error}}</small
                     >{{end}}

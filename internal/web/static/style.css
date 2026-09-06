@@ -137,6 +137,10 @@ tr:last-child td {
     border-bottom: 0;
 }
 
+td.body {
+    white-space: pre-wrap;
+}
+
 .badge {
     display: inline-block;
     margin: 0 0 0.75rem;
