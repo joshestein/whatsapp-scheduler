@@ -121,8 +121,19 @@ func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
 		s.formError(w, "recipient and message are required")
 		return
 	}
-	// datetime-local input has no zone. Interpret it in the machine's local zone, store UTC
-	sendAt, err := time.ParseInLocation("2006-01-02T15:04", r.PostForm.Get("send_at"), time.Local)
+	// datetime-local input has no zone. The browser posts its IANA zone in
+	// send_zone; interpret the wall-clock time in that zone and store UTC. Fall
+	// back to the machine's local zone when the browser sends nothing usable.
+	zone := r.PostForm.Get("send_zone")
+	loc := time.Local
+	if zone != "" {
+		if l, err := time.LoadLocation(zone); err == nil {
+			loc = l
+		} else {
+			zone = "" // unknown name; fall back and do not store junk
+		}
+	}
+	sendAt, err := time.ParseInLocation("2006-01-02T15:04", r.PostForm.Get("send_at"), loc)
 	if err != nil {
 		s.formError(w, "invalid send time")
 		return
