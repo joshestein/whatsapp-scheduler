@@ -1,11 +1,13 @@
 package session
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
 	"fmt"
 	"log/slog"
-	"sort"
+	"slices"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -28,8 +30,16 @@ const (
 )
 
 type Contact struct {
-	JID  string
-	Name string
+	JID       string
+	IsGroup   bool
+	Primary   string
+	Secondary string // phone for people, empty for groups
+}
+
+// Search is the lowercase text the combobox filters on: name plus phone. Groups
+// have no phone, so this is their name alone.
+func (c Contact) Search() string {
+	return strings.ToLower(strings.TrimSpace(c.Primary + " " + c.Secondary))
 }
 
 type Session struct {
@@ -112,28 +122,92 @@ func (s *Session) Contacts(ctx context.Context) []Contact {
 	if err != nil {
 		s.log.Warn("contacts", "err", err)
 	}
-	out := make([]Contact, 0, len(all))
-	for jid, c := range all {
-		name := c.FullName
-		if name == "" {
-			name = c.PushName
+
+	lidToPN := make(map[types.JID]types.JID)
+	for jid := range all {
+		if jid.Server != types.HiddenUserServer {
+			continue
 		}
-		if name != "" {
-			out = append(out, Contact{JID: jid.String(), Name: name})
+		pn, err := s.client.Store.LIDs.GetPNForLID(ctx, jid)
+		if err != nil {
+			s.log.Warn("lid lookup", "jid", jid, "err", err)
+			continue
+		}
+		if !pn.IsEmpty() {
+			lidToPN[jid] = pn
 		}
 	}
+
+	var groups []*types.GroupInfo
 	if s.client.IsConnected() {
-		groups, err := s.client.GetJoinedGroups(ctx)
-		if err != nil {
+		if groups, err = s.client.GetJoinedGroups(ctx); err != nil {
 			s.log.Warn("joined groups", "err", err)
 		}
-		for _, g := range groups {
-			out = append(out, Contact{JID: g.JID.String(), Name: g.Name + " (group)"})
+	}
+	return derive(id.ToNonAD(), all, lidToPN, groups)
+}
+
+// derive builds the contact list. Pure: no store, no network.
+//
+// People need a name (FullName, PushName, BusinessName, first non-empty).
+// Nameless rows are store noise. @lid rows fold into their phone-number row when
+// the store has a mapping, else drop. The user's own number is "Me", never a
+// person row.
+func derive(me types.JID, all map[types.JID]types.ContactInfo, lidToPN map[types.JID]types.JID, groups []*types.GroupInfo) []Contact {
+	people := make(map[string]Contact) // by phone
+	for jid, c := range all {
+		if jid.Server != types.DefaultUserServer {
+			continue
+		}
+		if name := displayName(c); name != "" {
+			people[jid.User] = person(jid.User, name)
 		}
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
-	me := Contact{JID: id.ToNonAD().String(), Name: "Me"}
-	return append([]Contact{me}, out...)
+	for jid, c := range all {
+		pn, ok := lidToPN[jid]
+		if !ok {
+			continue // not a LID, or unmapped
+		}
+		if _, seen := people[pn.User]; seen {
+			continue // PN row wins
+		}
+		if name := displayName(c); name != "" {
+			people[pn.User] = person(pn.User, name)
+		}
+	}
+	delete(people, me.User)
+
+	out := make([]Contact, 0, len(people)+len(groups))
+	for _, p := range people {
+		out = append(out, p)
+	}
+	for _, g := range groups {
+		name := g.Name
+		if name == "" {
+			name = "Unnamed group"
+		}
+		out = append(out, Contact{JID: g.JID.String(), IsGroup: true, Primary: name})
+	}
+	slices.SortFunc(out, func(a, b Contact) int {
+		return cmp.Or(
+			strings.Compare(strings.ToLower(a.Primary), strings.ToLower(b.Primary)),
+			strings.Compare(a.JID, b.JID),
+		)
+	})
+	self := Contact{JID: me.String(), Primary: "Me", Secondary: me.User}
+	return append([]Contact{self}, out...)
+}
+
+func person(phone, name string) Contact {
+	return Contact{
+		JID:       types.NewJID(phone, types.DefaultUserServer).String(),
+		Primary:   name,
+		Secondary: phone,
+	}
+}
+
+func displayName(c types.ContactInfo) string {
+	return cmp.Or(c.FullName, c.PushName, c.BusinessName)
 }
 
 func (s *Session) run(ctx context.Context) {
