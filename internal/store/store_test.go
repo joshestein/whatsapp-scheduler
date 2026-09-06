@@ -85,8 +85,12 @@ func TestSentAndFailedRequireSending(t *testing.T) {
 	ctx := context.Background()
 	m := create(t, s, now)
 
-	if err := s.MarkSent(ctx, m.ID, now); !errors.Is(err, ErrNotFound) {
-		t.Fatalf("MarkSent on pending = %v, want ErrNotFound", err)
+	// Not in sending: a no-op, not an error. The row is untouched.
+	if err := s.MarkSent(ctx, m.ID, now); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := s.Get(ctx, m.ID); got.State != message.Pending || got.SentAt != nil {
+		t.Fatalf("MarkSent on pending changed the row: %+v", got)
 	}
 	if _, err := s.BeginSending(ctx, now); err != nil {
 		t.Fatal(err)
@@ -128,8 +132,12 @@ func TestDeleteOnlyPending(t *testing.T) {
 	if _, err := s.BeginSending(ctx, now); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Delete(ctx, m.ID); !errors.Is(err, ErrNotFound) {
-		t.Fatalf("delete sending = %v, want ErrNotFound", err)
+	// Not pending: a no-op, not an error. The row survives.
+	if err := s.Delete(ctx, m.ID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.Get(ctx, m.ID); err != nil {
+		t.Fatalf("delete on sending removed the row: %v", err)
 	}
 }
 
