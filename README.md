@@ -30,14 +30,52 @@ number can be banned. Use at your own risk. See `docs/adr/`.
 make run
 ```
 
-Serves on `127.0.0.1:20648` by default. On first run, scan the printed QR
-code with WhatsApp on your phone.
+Open <http://127.0.0.1:20648>. On first run the page shows a QR code: on your
+phone, WhatsApp > Settings > Linked devices > Link a device, and scan it.
 
-Config is by environment variable:
+Data (database and WhatsApp session) lives in the platform config directory,
+`~/Library/Application Support/whatsapp-scheduler` on macOS and
+`~/.config/whatsapp-scheduler` on Linux. `make run` and the installed agent
+below share it, so you pair once.
+
+## Install on macOS (runs at login)
+
+Installs the binary to `~/.local/bin` and a launchd user agent that starts it
+at login and restarts it if it exits. No sudo.
+
+```
+make install
+```
+
+Then open <http://127.0.0.1:20648>. If you already paired via `make run`, it is
+already connected.
+
+| | Path |
+|---|---|
+| Binary | `~/.local/bin/whatsapp-scheduler` |
+| Agent | `~/Library/LaunchAgents/com.joshestein.whatsapp-scheduler.plist` |
+| Data | `~/Library/Application Support/whatsapp-scheduler/` |
+| Log | `~/Library/Logs/whatsapp-scheduler.log` |
+
+Day to day:
+
+```
+make restart    # rebuild, reinstall the binary, restart the agent
+make uninstall  # stop the agent, remove it and the binary; data is kept
+tail -f ~/Library/Logs/whatsapp-scheduler.log
+```
+
+While the agent is running, `make run` fails with "address already in use".
+That is deliberate: two processes must not share the database and session.
+Use `make restart` to test changes, or `make uninstall` first.
+
+## Configuration
+
+By environment variable. The defaults are what the launchd agent uses.
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `DATA_DIR` | `./data` | Where the database file lives |
+| `DATA_DIR` | platform config dir, see above | Where the database and session live |
 | `LISTEN_ADDR` | `127.0.0.1:20648` | HTTP listen address |
 | `TICK` | `60s` | Scheduler poll interval |
 | `GRACE_WINDOW` | `30m` | How late a send may run before it counts as missed |
