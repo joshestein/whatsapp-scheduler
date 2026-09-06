@@ -12,7 +12,7 @@ Domain language for the WhatsApp Scheduler. One word, one meaning.
 
 **Send** — the act of delivering a Scheduled Message through the live Session.
 
-**Command Channel** — one WhatsApp group, set by config (its JID), that the app watches. The user sends **Commands** there. The app acts only on messages from the user's own number (`IsFromMe`).
+**Command Channel** — the user's self-chat ("Message yourself" in WhatsApp). The app watches it and acts on **Commands** sent there. Only the user can write to it; the app also checks `IsFromMe`.
 
 **Command** — a message in the Command Channel that starts with `/verb`. v1 has one verb, `/schedule`, which creates a Scheduled Message. The verb space is open for later (`/list`, `/cancel`, `/failed`), but the dashboard stays the source of truth for the list, cancel, and missed/failed; chat verbs are added only where opening the dashboard is real friction. A message that does not start with `/` is not a Command and is ignored.
 
