@@ -67,6 +67,19 @@ Linux, override with `systemctl --user edit whatsapp-scheduler` and add
 | `TICK`         | `60s`             | Scheduler poll interval                            |
 | `GRACE_WINDOW` | `30m`             | How late a send may run before it counts as missed |
 
+## What's next
+
+Interface using WhatsApp itself, without the dashboard. Send a `/schedule`
+command to yourself ("Message yourself"). The app reads it, creates the
+message, and replies with what it understood.
+
+```
+/schedule
+To: John
+At: 3pm
+Running late, see you at 4
+```
+
 ## Development
 
 Go 1.26+ and `make`. One static Go binary:
