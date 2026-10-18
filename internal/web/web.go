@@ -70,8 +70,17 @@ func (d listData) Attention() int {
 // the same dot: Messages and Attention resolve through the embedded struct.
 type indexData struct {
 	listData
+	Form    formData
+	Session sessionData
+}
+
+// formData drives the message form. Edit is nil when the form creates a new
+// message. OOB marks the form for an out-of-band swap, which resets it after a
+// successful edit.
+type formData struct {
 	Contacts []session.Contact
-	Session  sessionData
+	Edit     *message.Message
+	OOB      bool
 }
 
 type sessionData struct {
