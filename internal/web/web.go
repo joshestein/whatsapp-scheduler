@@ -44,6 +44,7 @@ func (s *Server) Handler() http.Handler {
 	mux.Handle("GET /static/", http.FileServerFS(staticFS))
 	mux.HandleFunc("GET /{$}", s.index)
 	mux.HandleFunc("POST /messages", s.createMessage)
+	mux.HandleFunc("GET /messages/{id}/edit", s.editForm)
 	mux.HandleFunc("DELETE /messages/{id}", s.deleteMessage)
 	mux.HandleFunc("POST /messages/{id}/ack", s.ackMessage)
 	mux.HandleFunc("GET /session", s.sessionPartial)
@@ -156,6 +157,36 @@ func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.render(w, "list", listData{Messages: msgs})
+}
+func (s *Server) editForm(w http.ResponseWriter, r *http.Request) {
+	m, ok := s.pending(w, r)
+	if !ok {
+		return
+	}
+	s.render(w, "form", formData{Contacts: s.session.Contacts(r.Context()), Edit: &m})
+}
+
+const notPendingMsg = "this message was already sent, missed, or cancelled, so it cannot be edited"
+
+// pending loads the pending message the path id names. Otherwise it answers
+// with a form error and returns false.
+func (s *Server) pending(w http.ResponseWriter, r *http.Request) (message.Message, bool) {
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		s.formError(w, notPendingMsg)
+		return message.Message{}, false
+	}
+	m, err := s.store.Get(r.Context(), id)
+	switch {
+	case errors.Is(err, store.ErrNotFound), err == nil && m.State != message.Pending:
+		s.formError(w, notPendingMsg)
+	case err != nil:
+		s.fail(w, "get message", err)
+	default:
+		return m, true
+	}
+	return message.Message{}, false
+}
 
 // readFields reads the recipient, body, and send time that create and edit
 // share. It reads the send time in loc. A non-empty problem is a message for
