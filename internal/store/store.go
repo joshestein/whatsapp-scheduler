@@ -15,7 +15,10 @@ import (
 //go:embed migrations/*.sql
 var migrations embed.FS
 
-var ErrNotFound = errors.New("message not found")
+var (
+	ErrNotFound   = errors.New("message not found")
+	ErrNotPending = errors.New("message is not pending")
+)
 
 type Store struct {
 	db *sql.DB
