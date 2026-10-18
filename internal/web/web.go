@@ -163,6 +163,30 @@ func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.render(w, "list", listData{Messages: msgs})
+
+// readFields reads the recipient, body, and send time that create and edit
+// share. It reads the send time in loc. A non-empty problem is a message for
+// the user.
+func (s *Server) readFields(r *http.Request, loc *time.Location) (m message.Message, problem string) {
+	jid, err := normaliseRecipient(r.PostForm.Get("recipient_jid"))
+	if err != nil {
+		return m, "invalid recipient: enter a phone number with country code, or pick a contact"
+	}
+	body := strings.TrimSpace(r.PostForm.Get("body"))
+	if jid == "" || body == "" {
+		return m, "recipient and message are required"
+	}
+	sendAt, err := time.ParseInLocation("2006-01-02T15:04", r.PostForm.Get("send_at"), loc)
+	if err != nil {
+		return m, "invalid send time"
+	}
+	return message.Message{
+		RecipientJID:  jid,
+		RecipientName: s.contactName(r.Context(), jid),
+		Body:          body,
+		SendAt:        sendAt.UTC(),
+	}, ""
+}
 }
 
 func (s *Server) renderList(w http.ResponseWriter, r *http.Request) {
