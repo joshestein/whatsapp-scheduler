@@ -44,6 +44,7 @@ func (s *Server) Handler() http.Handler {
 	mux.Handle("GET /static/", http.FileServerFS(staticFS))
 	mux.HandleFunc("GET /{$}", s.index)
 	mux.HandleFunc("POST /messages", s.createMessage)
+	mux.HandleFunc("GET /messages/new", s.newForm)
 	mux.HandleFunc("GET /messages/{id}/edit", s.editForm)
 	mux.HandleFunc("DELETE /messages/{id}", s.deleteMessage)
 	mux.HandleFunc("POST /messages/{id}/ack", s.ackMessage)
@@ -158,6 +159,10 @@ func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
 	}
 	s.render(w, "list", listData{Messages: msgs})
 }
+func (s *Server) newForm(w http.ResponseWriter, r *http.Request) {
+	s.render(w, "form", formData{Contacts: s.session.Contacts(r.Context())})
+}
+
 func (s *Server) editForm(w http.ResponseWriter, r *http.Request) {
 	m, ok := s.pending(w, r)
 	if !ok {
