@@ -98,6 +98,27 @@ button:hover {
     background: #0e7568;
 }
 
+.editing {
+    margin: 0;
+    font-weight: 600;
+}
+
+.actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Quiet like the row actions: discarding is not the main action */
+button.secondary {
+    background: #fff;
+    color: var(--fg);
+    border: 1px solid var(--border);
+}
+
+button.secondary:hover {
+    background: #f0f0ee;
+}
+
 #form-error {
     color: var(--error);
     margin: 0;
