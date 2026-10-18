@@ -33,6 +33,18 @@
                 input.value = zone;
                 document.getElementById("zone-label").textContent = zone;
             });
+
+            // Tint the row the form is editing. Every swap can change the form
+            // or the list, so read both from the page each time.
+            htmx.onLoad(function () {
+                var form = document.getElementById("message-form");
+                var id = form && form.dataset.editing;
+                document.querySelectorAll("tr.editing").forEach(function (tr) {
+                    tr.classList.remove("editing");
+                });
+                var row = id && document.getElementById("msg-" + id);
+                if (row) row.classList.add("editing");
+            });
         </script>
     </body>
 </html>
