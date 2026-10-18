@@ -1,8 +1,12 @@
 // Searchable combobox over the embedded contact list. Filtering is client-side.
 // The hidden recipient_jid carries the chosen JID, or the raw text when nothing
 // was chosen; the server normalises raw text.
-(() => {
-  const box = document.getElementById("recipient");
+//
+// htmx.onLoad runs on page load and on every swap. The form is swapped for
+// edit and back, so each new form gets fresh listeners.
+htmx.onLoad((root) => {
+  const box = root.querySelector('[role="combobox"]');
+  if (!box) return;
   const hidden = box.form.elements.recipient_jid;
   const list = document.getElementById(box.getAttribute("aria-controls"));
   const options = Array.from(list.querySelectorAll('[role="option"]'));
@@ -93,4 +97,4 @@
     box.parentElement.classList.remove("selected");
     close();
   });
-})();
+});
