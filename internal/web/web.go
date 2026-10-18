@@ -180,6 +180,11 @@ func (s *Server) readFields(r *http.Request, loc *time.Location) (m message.Mess
 		SendAt:        sendAt.UTC(),
 	}, ""
 }
+
+// inPast reports whether t is before the current minute. datetime-local has
+// minute precision, so the current minute itself is still accepted.
+func inPast(t time.Time) bool {
+	return t.Before(time.Now().Truncate(time.Minute))
 }
 
 func (s *Server) renderList(w http.ResponseWriter, r *http.Request) {
