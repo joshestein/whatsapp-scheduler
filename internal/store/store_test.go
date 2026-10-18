@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
 	"testing"
 	"time"
@@ -137,6 +138,40 @@ func TestDeleteOnlyPending(t *testing.T) {
 	}
 	if _, err := s.Get(ctx, m.ID); err != nil {
 		t.Fatalf("delete on sending removed the row: %v", err)
+	}
+}
+
+func TestUpdateOnlyPending(t *testing.T) {
+	s := open(t)
+	ctx := context.Background()
+	m := create(t, s, now)
+
+	m.Body = "edited"
+	m.SendAt = now.Add(time.Hour)
+	if err := s.Update(ctx, m); err != nil {
+		t.Fatal(err)
+	}
+	got, _ := s.Get(ctx, m.ID)
+	if got.Body != "edited" || !got.SendAt.Equal(now.Add(time.Hour)) || got.State != message.Pending {
+		t.Fatalf("after update: %+v", got)
+	}
+
+	// The scheduler claims it; a late edit must not touch the row.
+	if _, err := s.BeginSending(ctx, now.Add(time.Hour)); err != nil {
+		t.Fatal(err)
+	}
+	m.Body = "too late"
+	if err := s.Update(ctx, m); !errors.Is(err, ErrNotPending) {
+		t.Fatalf("update on sending: err = %v, want ErrNotPending", err)
+	}
+	got, _ = s.Get(ctx, m.ID)
+	if got.Body != "edited" {
+		t.Fatalf("update on sending changed body to %q", got.Body)
+	}
+
+	m.ID = 999
+	if err := s.Update(ctx, m); !errors.Is(err, ErrNotPending) {
+		t.Fatalf("update on missing row: err = %v, want ErrNotPending", err)
 	}
 }
 
