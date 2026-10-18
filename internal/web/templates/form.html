@@ -1,0 +1,69 @@
+{{define "form"}}
+<!-- One form for create and edit. GET /messages/{id}/edit swaps in the edit
+     form; a successful PUT or "Discard edit" swaps the blank form back. -->
+<form
+    id="message-form"
+    {{with .Edit}}hx-put="/messages/{{.ID}}"{{else}}hx-post="/messages"{{end}}
+    hx-target="#messages"
+    hx-swap="outerHTML"
+    {{if .OOB}}hx-swap-oob="true"{{end}}
+    hx-on::after-request="if(event.detail.successful){this.reset();document.getElementById('form-error').textContent=''}"
+>
+    <p id="form-error"></p>
+    {{if .Edit}}<p class="editing">Editing a scheduled message</p>{{end}}
+    <div class="field">
+        <label for="recipient">Recipient</label>
+        <div class="combobox{{if .Edit}} selected{{end}}">
+            <input
+                id="recipient"
+                type="text"
+                role="combobox"
+                autocomplete="off"
+                aria-expanded="false"
+                aria-controls="contacts"
+                aria-autocomplete="list"
+                required
+                placeholder="Search contacts, or type a number with country code"
+                {{with .Edit}}value="{{.RecipientName}}"{{end}}
+            />
+            <input type="hidden" name="recipient_jid" {{with .Edit}}value="{{.RecipientJID}}"{{end}} />
+            <ul id="contacts" role="listbox" hidden>
+                {{range $i, $c := .Contacts}}
+                <li
+                    role="option"
+                    id="opt-{{$i}}"
+                    data-jid="{{$c.JID}}"
+                    data-name="{{$c.Primary}}"
+                    data-search="{{$c.Search}}"
+                >
+                    <span class="name">{{$c.Primary}}</span>
+                    <span class="muted">{{if $c.IsGroup}}Group{{else}}{{$c.Secondary}}{{end}}</span>
+                </li>
+                {{end}}
+            </ul>
+        </div>
+    </div>
+    <!-- An edit keeps the message's creation zone, so the server renders the
+         label and the form posts no send_zone. Create gets both from the browser. -->
+    <label
+        >Send at
+        <input name="send_at" type="datetime-local" required {{with .Edit}}value="{{.SendAtZoned.Format "2006-01-02T15:04"}}"{{end}} />
+        <small class="muted"
+            >{{if .Edit}}Times are in the message's zone{{else}}Times are in your zone{{end}}:
+            <span id="zone-label">{{with .Edit}}{{.SendAtZoned.Location}}{{end}}</span></small
+        >
+    </label>
+    {{if not .Edit}}<input type="hidden" name="send_zone" id="send_zone" />{{end}}
+    <label>Message <textarea name="body" required {{if .Edit}}autofocus{{end}}>{{with .Edit}}{{.Body}}{{end}}</textarea></label>
+    {{if .Edit}}
+    <div class="actions">
+        <button type="submit">Save changes</button>
+        <button type="button" class="secondary" hx-get="/messages/new" hx-target="#message-form" hx-swap="outerHTML">
+            Discard edit
+        </button>
+    </div>
+    {{else}}
+    <button type="submit">Schedule</button>
+    {{end}}
+</form>
+{{end}}
