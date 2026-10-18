@@ -98,6 +98,12 @@ button:hover {
     background: #0e7568;
 }
 
+button.htmx-request,
+form.htmx-request button[type="submit"] {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
 .editing {
     margin: 0;
     font-weight: 600;
