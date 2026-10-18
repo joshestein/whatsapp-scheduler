@@ -220,6 +220,29 @@ td button:hover {
     background: #f0f0ee;
 }
 
+td.row-actions {
+    white-space: nowrap;
+}
+
+/* Cancel deletes the message: red, so it never reads like Edit */
+td button.danger {
+    color: var(--error);
+    border-color: var(--error);
+}
+
+td button.danger:hover {
+    background: var(--error-bg);
+}
+
+/* The row the form is editing. Inset shadow, not border: a border would shift the columns */
+tr.editing td {
+    background: #eef7f5;
+}
+
+tr.editing td:first-child {
+    box-shadow: inset 3px 0 0 var(--accent);
+}
+
 .field {
     display: grid;
     gap: 0.25rem;

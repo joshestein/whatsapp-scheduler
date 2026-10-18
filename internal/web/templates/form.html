@@ -3,6 +3,7 @@
      form; a successful PUT or "Discard edit" swaps the blank form back. -->
 <form
     id="message-form"
+    {{with .Edit}}data-editing="{{.ID}}"{{end}}
     {{with .Edit}}hx-put="/messages/{{.ID}}"{{else}}hx-post="/messages"{{end}}
     hx-target="#messages"
     hx-swap="outerHTML"
