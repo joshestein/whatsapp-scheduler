@@ -110,7 +110,7 @@ func (s *Server) index(w http.ResponseWriter, r *http.Request) {
 	}
 	s.render(w, "index", indexData{
 		listData: listData{Messages: msgs},
-		Contacts: s.session.Contacts(r.Context()),
+		Form:     formData{Contacts: s.session.Contacts(r.Context())},
 		Session:  s.sessionData(),
 	})
 }
@@ -118,16 +118,6 @@ func (s *Server) index(w http.ResponseWriter, r *http.Request) {
 func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		s.formError(w, "bad form")
-		return
-	}
-	jid, err := normaliseRecipient(r.PostForm.Get("recipient_jid"))
-	if err != nil {
-		s.formError(w, "invalid recipient: enter a phone number with country code, or pick a contact")
-		return
-	}
-	body := strings.TrimSpace(r.PostForm.Get("body"))
-	if jid == "" || body == "" {
-		s.formError(w, "recipient and message are required")
 		return
 	}
 	// datetime-local input has no zone. The browser posts its IANA zone in
@@ -142,29 +132,23 @@ func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
 			zone = "" // unknown name; fall back and do not store junk
 		}
 	}
-	sendAt, err := time.ParseInLocation("2006-01-02T15:04", r.PostForm.Get("send_at"), loc)
-	if err != nil {
-		s.formError(w, "invalid send time")
+	m, problem := s.readFields(r, loc)
+	if problem != "" {
+		s.formError(w, problem)
 		return
 	}
-	now := time.Now()
-	if sendAt.Before(now.Truncate(time.Minute)) {
+	if inPast(m.SendAt) {
 		s.formError(w, "send time is in the past")
 		return
 	}
-	name := s.contactName(r.Context(), jid)
+	m.SendZone = zone
 
-	_, err = s.store.Create(r.Context(), message.Message{
-		RecipientJID:  jid,
-		RecipientName: name,
-		Body:          body,
-		SendAt:        sendAt.UTC(),
-		SendZone:      zone,
-	}, time.Now())
-	if err != nil {
+	if _, err := s.store.Create(r.Context(), m, time.Now()); err != nil {
 		s.fail(w, "create message", err)
 		return
 	}
+	s.renderList(w, r)
+}
 
 	msgs, err := s.store.List(r.Context())
 	if err != nil {
