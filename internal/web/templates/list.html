@@ -26,6 +26,13 @@
                 <td>
                     {{if eq .State "pending"}}
                     <button
+                        hx-get="/messages/{{.ID}}/edit"
+                        hx-target="#message-form"
+                        hx-swap="outerHTML"
+                    >
+                        Edit
+                    </button>
+                    <button
                         hx-delete="/messages/{{.ID}}"
                         hx-target="#messages"
                         hx-swap="outerHTML"
