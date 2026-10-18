@@ -43,8 +43,7 @@
             </ul>
         </div>
     </div>
-    <!-- An edit keeps the message's creation zone, so the server renders the
-         label and the form posts no send_zone. Create gets both from the browser. -->
+    <!-- Edit: server renders the message's zone. Create: the browser fills in its own. -->
     <label
         >Send at
         <input name="send_at" type="datetime-local" required {{with .Edit}}value="{{.SendAtZoned.Format "2006-01-02T15:04"}}"{{end}} />

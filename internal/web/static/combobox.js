@@ -2,8 +2,7 @@
 // The hidden recipient_jid carries the chosen JID, or the raw text when nothing
 // was chosen; the server normalises raw text.
 //
-// htmx.onLoad runs on page load and on every swap. The form is swapped for
-// edit and back, so each new form gets fresh listeners.
+// htmx.onLoad, not once: each swapped-in form needs its own listeners.
 htmx.onLoad((root) => {
   const box = root.querySelector('[role="combobox"]');
   if (!box) return;

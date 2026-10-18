@@ -24,8 +24,7 @@
 
         <script>
             // The browser knows the user's zone; the server converts and stores it.
-            // htmx.onLoad also runs when the blank form is swapped back in after an edit.
-            // The edit form has no send_zone: an edit keeps the message's zone.
+            // htmx.onLoad, not once: the blank form is swapped back in after an edit.
             htmx.onLoad(function (root) {
                 var input = root.querySelector("#send_zone");
                 if (!input) return;
