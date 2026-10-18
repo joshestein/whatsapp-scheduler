@@ -164,6 +164,27 @@ func (s *Store) RecoverSending(ctx context.Context) (int64, error) {
 	return res.RowsAffected()
 }
 
+// Update rewrites the recipient, body, and send time of a pending message. It
+// returns ErrNotPending when the row is gone or has left pending: the scheduler
+// may claim it while the user edits.
+func (s *Store) Update(ctx context.Context, m message.Message) error {
+	res, err := s.db.ExecContext(ctx, `
+		UPDATE messages SET recipient_jid = ?, recipient_name = ?, body = ?, send_at = ?, send_zone = ?
+		WHERE id = ? AND state = ?`,
+		m.RecipientJID, m.RecipientName, m.Body, m.SendAt.Unix(), m.SendZone, m.ID, message.Pending)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return ErrNotPending
+	}
+	return nil
+}
+
 // Only pending messages are deleted.
 func (s *Store) Delete(ctx context.Context, id int64) error {
 	_, err := s.db.ExecContext(ctx, `DELETE FROM messages WHERE id = ? AND state = ?`, id, message.Pending)
