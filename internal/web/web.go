@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"html/template"
 	"log/slog"
@@ -46,6 +47,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /messages", s.createMessage)
 	mux.HandleFunc("GET /messages/new", s.newForm)
 	mux.HandleFunc("GET /messages/{id}/edit", s.editForm)
+	mux.HandleFunc("PUT /messages/{id}", s.updateMessage)
 	mux.HandleFunc("DELETE /messages/{id}", s.deleteMessage)
 	mux.HandleFunc("POST /messages/{id}/ack", s.ackMessage)
 	mux.HandleFunc("GET /session", s.sessionPartial)
@@ -152,13 +154,49 @@ func (s *Server) createMessage(w http.ResponseWriter, r *http.Request) {
 	s.renderList(w, r)
 }
 
+func (s *Server) updateMessage(w http.ResponseWriter, r *http.Request) {
+	old, ok := s.pending(w, r)
+	if !ok {
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		s.formError(w, "bad form")
+		return
+	}
+	// An edit keeps the creation zone, so a body-only edit never moves the
+	// send instant.
+	m, problem := s.readFields(r, old.SendAtZoned().Location())
+	if problem != "" {
+		s.formError(w, problem)
+		return
+	}
+	// An unchanged send time may be past: the message is overdue, and the
+	// Grace Window still decides whether it sends.
+	if !m.SendAt.Equal(old.SendAt) && inPast(m.SendAt) {
+		s.formError(w, "send time is in the past")
+		return
+	}
+	m.ID, m.SendZone = old.ID, old.SendZone
+
+	err := s.store.Update(r.Context(), m)
+	if errors.Is(err, store.ErrNotPending) {
+		s.formError(w, notPendingMsg)
+		return
+	}
+	if err != nil {
+		s.fail(w, "update message", err)
+		return
+	}
+
 	msgs, err := s.store.List(r.Context())
 	if err != nil {
 		s.fail(w, "list messages", err)
 		return
 	}
 	s.render(w, "list", listData{Messages: msgs})
+	s.render(w, "form", formData{Contacts: s.session.Contacts(r.Context()), OOB: true})
 }
+
 func (s *Server) newForm(w http.ResponseWriter, r *http.Request) {
 	s.render(w, "form", formData{Contacts: s.session.Contacts(r.Context())})
 }
